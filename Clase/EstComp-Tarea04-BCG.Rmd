@@ -1,0 +1,175 @@
+---
+title: "EstComp-Tarea04"
+author: "Bruno Gonzalez"
+date: "4/9/2019"
+output:
+  html_document: default
+---
+
+## 4. Programación funcional y distribución muestral {-}
+
+1. Descarga la carpeta specdata, ésta contiene 332 archivos csv que almacenan información de monitoreo de contaminación en 332 ubicaciones de EUA. Cada archivo contiene información de una unidad de monitoreo y el número de identificación del monitor es el nombre del archivo. En este ejercicio nos interesa unir todas las tablas en un solo data.frame que incluya el identificador de las estaciones.
+
+  + La siguiente instrucción descarga los datos si trabajas con proyectos de 
+  RStudio, también puedes descargar el zip manualmente.
+
+```{r descarga_specdata, eval = FALSE}
+library(usethis)
+use_directory("data") 
+use_zip("https://d396qusza40orc.cloudfront.net/rprog%2Fdata%2Fspecdata.zip", destdir = "data")
+```
+
+  + Crea un vector con las direcciones de los archivos.
+
+```{r direcciones}
+paths <- dir("data/specdata", full.names = TRUE)
+
+```
+  
+  + Lee uno de los archivos usando la función `read_csv()` del paquete `readr`. Tip: especifica el tipo de cada columna usando el parámetro `col_types`.
+  
+```{r lee_archivo}
+library(readr)
+read_csv(paths[1],
+         col_types = cols(
+           Date = col_date(),
+           sulfate = col_double(),
+           nitrate = col_double(),
+           ID = col_integer()
+         ))
+```
+  
+  
+  + Utiliza la función `map_df()` para iterar sobre el vector con las direcciones de los archivos csv y crea un data.frame con todos los datos,   recuerda añadir una columna con el nombre del archivo para poder identificar
+  la estación.
+  
+```{r lee archivo, message=FALSE}
+library(tidyverse)
+map_df(paths,
+  read_csv,
+  col_types = cols(
+    Date = col_date(),
+    sulfate = col_double(),
+    nitrate = col_double(),
+    ID = col_integer())
+     )
+```
+
+  
+2. Consideramos los datos de ENLACE edo. de México (`enlace`), y la columna de calificaciones de español 3^o^ de primaria (`esp_3`). 
+
+```{r lee_enlace}
+library(estcomp)
+enlace <- enlacep_2013 %>% 
+    janitor::clean_names() %>% 
+    mutate(id = 1:n()) %>% 
+    select(id, cve_ent, turno, tipo, esp_3 = punt_esp_3, esp_6 = punt_esp_6, 
+        n_eval_3 = alum_eval_3, n_eval_6 = alum_eval_6) %>% 
+    na.omit() %>% 
+    filter(esp_3 > 0, esp_6 > 0, n_eval_3 > 0, n_eval_6 > 0, cve_ent == "15")
+
+```
+
+
+- Selecciona una muestra de tamaño $n = 10, 100, 1000$. Para cada muestra calcula media y el error estándar de la media usando el principio del *plug-in*: $\hat{\mu}=\bar{x}$, y $\hat{se}(\bar{x})=\hat{\sigma}_{P_n}/\sqrt{n}$. Tip:Usa la función `sample_n()` del paquete `deplyr` para generar las muestras.
+
+```{r estadisticas_muestra}
+
+dm_enlace <- function(n){
+  men <- sample_n(enlace,n)
+  m <- men %>% select(starts_with('esp')) %>% colMeans()
+  sde <- men %>% select(starts_with('esp')) %>% map_dbl(sd)/sqrt(n)
+  res <- list(media = m, error_estandar = sde)
+  return(res)
+}
+
+dm_enlace(10)
+dm_enlace(100)
+dm_enlace(1000)
+
+```
+
+
+- Ahora aproximareos la distribución muestral, para cada tamaño de muestra $n$: 
+i) simula $10,000$ muestras aleatorias,
+```{r sumula_10000}
+simula_media <- function(n) {
+  muestra <- sample_n(enlace,n) %>% 
+      gather(grado, calif, esp_3:esp_6)
+  mean(muestra$calif)  
+}
+
+medias_10 <- rerun(10000, simula_media(n = 10)) %>% flatten_dbl()
+medias_100 <- rerun(10000, simula_media(n = 100)) %>% flatten_dbl() 
+medias_1000 <- rerun(10000, simula_media(n = 1000)) %>% flatten_dbl()
+
+```
+
+ii) calcula la media en cada muestra,
+
+```{r media_muestras}
+mean(medias_10)
+mean(medias_100)
+mean(medias_1000)
+```
+
+iii) Realiza un histograma de la distribución muestral de las medias (las medias del paso anterior)
+
+```{r hist_muestras, message=FALSE, warning=FALSE}
+
+tibble(medias_10, medias_100, medias_1000) %>% 
+  gather(key = "nsim", "m", 1:3) %>% 
+  ggplot() +
+    geom_histogram(aes(m)) +
+    facet_grid(.~nsim) +
+    labs(title = "Histograma para cada tamaño de muestra",
+       x = element_blank(),
+       y = element_blank()) +
+    theme_light()
+
+```
+
+
+iv) aproxima el error estándar calculando la desviación estándar de las medias del paso ii.
+
+```{r es_muestral}
+
+sd(medias_10)
+sd(medias_100)
+sd(medias_1000)
+
+```
+
+
+
+- Calcula el error estándar de la media para cada tamaño de muestra usando la información poblacional (ésta no es una aproximación), usa la fórmula: $se_P(\bar{x}) = \sigma_P/ \sqrt{n}$.
+
+```{r es_poblacional}
+v_enlace <- enlace %>% 
+
+  select(esp_3) %>%
+  unlist(use.names = FALSE)
+
+```
+
+Error estandar para $n = 10$ es:
+```{r es_10}
+sd(v_enlace)/sqrt(10) 
+```
+
+Error estandar para $n = 100$ es:
+```{r es_100}
+sd(v_enlace)/sqrt(100) 
+```
+
+Error estandar para $n = 1000$ es:
+```{r es_1000}
+sd(v_enlace)/sqrt(1000) 
+```
+
+- ¿Cómo se comparan los errores estándar correspondientes a los distintos tamaños de muestra? 
+
+Los error estándard usando el principio de *plug-in* se aproximan (quedando por abajo) bastante a el error estándar usando la información poblacional.
+  
+
+

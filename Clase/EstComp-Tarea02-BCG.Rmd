@@ -1,0 +1,133 @@
+---
+title: "EstComp-Tarea02"
+author: "Bruno C. Gonzalez"
+date: "20/8/2019"
+output: html_document
+---
+
+## 2. Transformación de datos {-}
+
+1. Vuelve a instalar el paquete `estcomp` para asegurar que tengas todos los
+datos y su documentación: `devtools::install_github("tereom/estcomp")`
+
+2. Usaremos los datos `df_edu`, ve la ayuda para entender sus variables:
+
+```{r, eval=FALSE}
+library(estcomp)
+?df_edu
+```
+
+* ¿Cuál es el municipo con mayor escolaridad promedio (valor de `schoolyrs`)?
+  Tip: usa `filter` para quedarte únicamente con `sex` correspondiente a 
+  `Total`.
+    
+```{r esc_promedio, echo = FALSE, message=FALSE, warning=FALSE}
+
+library(tidyverse)
+library(estcomp)
+
+df_mayor_esc <- df_edu %>%
+  filter(sex == "Total") %>% 
+  select(state_code, municipio_code, state_name, state_abbr, municipio_name, schoolyrs) %>% 
+  arrange(-schoolyrs)
+
+df_mayor_esc
+
+```
+    
+  El municipio con mayor escolaridad es `r df_mayor_esc$municipio_name[1]`.
+
+
+  
+* Crea una `data.frame` que contenga una línea por cada estado y por sexo, con la siguiente información:
+  * La escolaridad promedio por estado y sexo (ponderada por la población `pop_15`)
+  * La población de cada sexo (mayor a 15 años)
+  
+```{r df_pob_esc, echo = FALSE, message=FALSE, warning=FALSE}
+
+df_edu %>% 
+  filter(sex != 'Total', !is.na(schoolyrs)) %>% 
+  group_by(state_code, state_name, sex) %>%
+  summarize(poblacion = sum(pop_15), escolaridad_prom = sum(schoolyrs*pop_15)/sum(pop_15))
+
+
+```
+  
+* Crea una variable que indique el porcentaje de la población que cursó al menos educación básica. 
+  
+```{r var_Meb, echo = FALSE, message=FALSE, warning=FALSE}
+
+df_Meb <- df_edu %>% 
+  filter(sex == 'Total') %>% 
+  mutate(porcentaje_Meb = (elementary + secondary + highschool + higher_edu)/100, poblacion_Meb = porcentaje_Meb*pop_15) %>%
+  summarize(total_Meb = 100*sum(poblacion_Meb)/sum(pop_15))
+
+```
+
+  El porcentaje de la población que  cursó al menos educación básica es `r paste0(round(df_Meb$total_Meb[1],1),"%")`
+  
+* Enuncia al menos una pregunta que se pueda responder transformando y graficando estos datos. Crea tu(s) gráfica(s).
+
+¿Que diferencia existe en la escolaridad entre la población masculina y la población femenina?
+
+```{r dif_gen, echo = FALSE, message=FALSE, warning=FALSE}
+
+df_dif <-  df_edu %>%
+  filter(sex != 'Total', !is.na(schoolyrs)) %>%
+  select(state_code, municipio_code, state_name, municipio_name, sex, pop_15, schoolyrs) %>% 
+  unite(temp, pop_15, schoolyrs) %>% 
+  spread(key = sex, value = temp) %>% 
+  separate(Hombres, into = c("pop_H", "esc_H"), sep = "_") %>%
+  separate(Mujeres, into = c("pop_M", "esc_M"), sep = "_") %>%
+  mutate(esc_M = as.numeric(esc_M), 
+         pop_H = as.numeric(pop_H), 
+         pop_M = as.numeric(pop_M), 
+         esc_H = as.numeric(esc_H),
+         diferencia = esc_M - esc_H,
+         mayor_esc = ifelse(diferencia<=0, "H", "M"))
+
+ggplot(df_dif) +
+  geom_point(aes(x = esc_H, y = esc_M, color = mayor_esc), size = 1, alpha = 0.8) +
+  coord_cartesian(xlim = c(2,14), ylim = c(2,14)) +
+  scale_x_continuous(breaks = seq(2,14,2)) +
+  scale_y_continuous(breaks = seq(2,14,2)) +
+  labs(title = "Escolaridad por género por municipio",
+       x = "Hombres",
+       y = "Mujeres",
+       color = "Mayor escolaridad") +
+  theme_light()
+
+EP_H <- round(sum(df_dif$pop_H*df_dif$esc_H)/sum(df_dif$pop_H),2)
+EP_M <- round(sum(df_dif$pop_M*df_dif$esc_M)/sum(df_dif$pop_M),2)
+
+```
+
+De la grafica anterior se puede ver que en general los hombres tienen mayor escolaridad que las mujeres. Esta diferencia es mas notoria en los extremos, es decir, municipios con muy alta o muy baja escolaridad. En promedio los hombres tienen `r EP_H` años de escolaridad, mietras que las mujeres tienen `r EP_M` años de escolaridad.
+
+En el siguiente mapa se puestra la diferencia de escolaridad entre hombres y mujerse por estado. Los números positivos indican que los hombres tiene mayor escolaridad.
+
+```{r dif_map, echo = FALSE, message=FALSE, warning=FALSE}
+
+library(mxmaps)
+
+df_map <-  df_edu %>%
+  filter(sex != 'Total', !is.na(schoolyrs)) %>%
+  select(region = state_code, municipio_code, state_name, sex, pop_15, schoolyrs) %>% 
+  unite(temp, pop_15, schoolyrs) %>% 
+  spread(key = sex, value = temp) %>% 
+  separate(Hombres, into = c("pop_H", "esc_H"), sep = "_") %>%
+  separate(Mujeres, into = c("pop_M", "esc_M"), sep = "_") %>%
+  mutate(esc_M = as.numeric(esc_M), 
+         pop_H = as.numeric(pop_H), 
+         pop_M = as.numeric(pop_M), 
+         esc_H = as.numeric(esc_H)) %>% 
+  group_by(region, state_name) %>% 
+  summarize(esc_M = mean(esc_M), pop_M = sum(pop_M), esc_H = mean(esc_H), pop_H = sum(pop_H)) %>% 
+  mutate(value = esc_H - esc_M)
+
+mxstate_choropleth(df_map,
+                   num_colors = 4,
+                   title = "Diferencia de escolaridad entre Hombres y Mujeres")
+
+
+```

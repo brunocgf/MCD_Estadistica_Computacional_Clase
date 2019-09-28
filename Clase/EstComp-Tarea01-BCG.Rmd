@@ -1,0 +1,103 @@
+---
+title: "EstComp-Tarea01"
+author: "Bruno C. Gonzalez"
+date: "14/8/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+
+## Evolución del PIB y Esperanza de Vida de 1952 a 2007
+
+Para esta tarea he elegido la base de datos de *gapminder*. Esta base contiene información quinquenal, desde 1952 hasta 2007, y para 142 países, de las siguientes variables: esperanza de vida, PIB per cápita y población.
+
+```{r Datos, echo = FALSE, message=FALSE}
+library(tidyverse)
+library(gapminder)
+
+glimpse(gapminder)
+
+```
+
+
+Con esta información es posible analizar la relación que existe entre dos de las variables más importantes en la calidad de vida de las  personas, variables que uno esperaría estrían directamente relacionadas.
+
+
+### ¿Cuál es la relación entre el PIB y la esperanza de vida?
+
+Mediante un diagrama de disperción se puede observar la relación entre Producto Interno Bruto y la esperanza de vida. Esta visualización incluirá todos los años disponibles en la base de datos, ya que independietemente del período de tiempo se espera que la relación entre las dos variables sea la misma.
+
+
+```{r GDP_EV, echo = FALSE, message=FALSE, warning=FALSE, results='hide', fig.align='center', fig.height=4}
+
+ggplot(gapminder, aes(x = gdpPercap, y = lifeExp)) +
+  geom_point(aes(color = continent)) +
+  labs(title = "Relación entre PIB per cápita vs Esperanza de Vida", x = "PIB per cápita (Dlls)", y = "Esperanza de vida (años)", color = "Continente") +
+  theme_light()
+
+```
+
+Se pueden observar varias cosas en la gráfica anterior. En primer lugar, la correlación es más alta para algunos continentes (Europa), y mucho menor para otros (África). Además, la correlación parece ser mayor en el rango medio del PIB, lo que da pie a pensar que la esperanza de vida solo está relacionada con el ingreso en cierto rango, pero en países con un PIB mayor o menor a este rango, la esperanza de vida puede estar en función a otras variables.
+
+Así, se puede conjeturar que existe una relación entre el PIB per cápita y la esperanza de vida solo en ciertas condiciones. Pero existen casos en que son otros los factores que afectan más a la esperanza de vida.
+
+Por otro lado, al estar mezclando los datos de varios años, es posible que el aumento en la esperanza de vida no dependa directamente del PIB, sino que ambas variables dependen de una tercera que ha evolucionado en el tiempo. Incluso, esta variable podría explicar la mayor variación del PIB per cápita, que la de la esperanza de vida, entre contienentes.
+
+
+### ¿El aumento en la esperanza de vida es producto del aumento en el PIB, u otra variable subyacente en el tiempo?
+
+A continuación se muestra el cambio a través de los años de la relación entre el PIB per cápita y la esperanza de vida. Además, se incluye un diagrama de caja y brazos para visualizar en primer lugar la disperción relativa de la esperanza de vida, y en segundo lugar (viendo el ancho de cada caja), la variación del PIB per cápita entre los países. 
+
+```{r GDP_EV_t, echo = FALSE, message=FALSE, warning=FALSE, results='hide', fig.width=9, fig.height=7, fig.align='center'}
+
+ggplot(filter(gapminder, country != 'Kuwait'), aes(x = gdpPercap, y = lifeExp)) +
+  geom_boxplot(fill = NA, size = 0.5, xlab = NA, outlier.color = NA) +
+  geom_point(aes(color = continent), size = 0.9) +
+  facet_wrap(.~year) +
+  labs(caption = "Se excluye Kuwait dado que es un punto atípico en el PIB") +
+  scale_x_continuous(breaks = seq(0,50000,20000)) +
+  labs(title = "PIB per cápita vs Esperanza de Vida por año",
+       x = "PIB per cápita (Dlls)",
+       y = "Esperanza de vida (años)",
+       color = "Continente") +
+  theme_light()
+
+```
+
+En estas gráficas se puede ver con mayor claridad que la esperanza de vida parece estar menos relacionada con el PIB per cápita para los valores altos y bajos del PIB. Además, se observan dos cosas que complementan lo anterior. En primer lugar, la esperanza de vida parace crecer casi al mismo ritmo en todos los países, inlcuiso se percive cierta disminución en el rango de variación entre los distintos países. En segundo lugar, la diferencia entre el PIB per cápita parace estar aumentanto entre los países.
+
+Por lo tanto, es muy posible que la esperanza de vida dependa de otros factores muchos más globales que solo el PIB. Tal vez porque ha pesar de las restricciónes monetarias de algunos países para poder acceder a los últimios avances en medicina, la sociedad ha sorteado estas restricciones mediante ayudas internacionales. Aunque esta ayuda parece llegar con mayor facilidad a ciertas regiones como Europa, mientras que pareciera que llegar en menor medida a algunos países de África.
+
+Aunque en general la esperanza ha aumentado a lo largo de los años, pareciera ser que el la riqueza ha aumentado con mayor velocidad en algunos países.
+
+
+### ¿Se ha concentrado la riqueza en algunos países?
+
+Para poder visualizar el PIB total, se multiplica el PIB per cápita por la población. La evolución de la participación PIB a través del tiempo agrupado por contienete se muestra en el siguiente gráfico, la información se presenta de esta manera para poder hacer un análisis más conciso.
+
+
+
+```{r GDP_t, echo = FALSE, message=FALSE, warning=FALSE, results='hide', fig.align='center'}
+
+gapminder_total <- gapminder %>%
+  mutate(GDP = gdpPercap*pop/1000000) %>%
+  group_by(continent, year) %>%
+  summarize(GDP = sum(GDP)) %>%
+  arrange(year, GDP) %>%
+  ungroup()
+
+
+ggplot(gapminder_total) +
+  geom_area(aes(x = year, y = GDP, fill = continent), stat = 'identity', position = "fill") +
+    labs(title = "Evolución del PIB",
+       x = "PIB (MMD)",
+       y = "Participación)",
+       fill = "Continente") +
+  theme_light()
+```
+
+Se puede observar que la participación del PIB en Asia ha sido la única en aumentar significativamente, quitando participación principalmente a Amércia (seguramente EEUU) y Europa. Es importante considerar que la población en Asia ha aumentado considerablemente, lo le da cierta perspectiva a lo visto arriba.
+
+Aunque la visualización de arriba nos da cierta noción en la participación en la riquesa por región, un análisis más detallado requiere ver la información por país, así como observar la evolución de la población y tal vez variabels más. 

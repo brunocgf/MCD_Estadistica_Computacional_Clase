@@ -1,0 +1,93 @@
+---
+title: "EstComp-Tarea03"
+author: "Bruno Gonzalez"
+date: "29/8/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 3. Unión de tablas y limpieza de datos {-}
+
+
+
+#### 1. ¿Están limpios los datos? en caso de que no ¿qué principio no cumplen?
+
+```{r , message=FALSE, warning=FALSE}
+library(estcomp)
+library(tidyverse)
+glimpse(df_marital)
+```
+
+  Los datos no están limpios ya que no cumplen con el principio en el cual cada renglón es una
+  observación, ya que el estado civil está repartido en varias columnas.
+  
+  Además, dado que la población se repite para cada estado civil, se puede juntar estas dos
+  columnas sin perder información.
+
+  $~$
+  
+#### 2. Limpia los datos y muestra las primeras y últimas líneas (usa `head()` y `tail()`).
+
+```{r}
+
+df_ml <- df_marital %>% 
+  gather(key = 'edo_civil', value = 'porc', single:other) %>% 
+  mutate(Total = round(porc*pop/100, 0)) %>% 
+  select(-pop, -porc)
+
+head(df_ml)
+tail(df_ml)
+
+```
+
+$~$
+
+#### 3. Filtra para eliminar los casos a total en las variables sexo y edad, calcula a nivel nacional cuál es la proporción en cada situación conyugal por grupo de edad y sexo. ¿Cómo puedes graficar o presentar los resultados?
+
+```{r}
+
+df_mg <- df_ml %>% 
+  filter(sex != 'Total', age_group != 'Total') %>% 
+  group_by(sex, age_group, edo_civil) %>% 
+  summarize(total = sum(Total)) %>% 
+  ungroup() %>% 
+  group_by(sex, age_group) %>% 
+  mutate(proporcion = total/sum(total)*100,
+         etiqueta = ifelse(proporcion>3, paste(round(proporcion,0), "%"), ""))
+
+```
+
+Para mostrar los datos y tener claridad en la representación de estos, se puede usar distintas gráficas de barras apiladas por estado civil, para cada grupo de edad y sexo. Admás, es conveniente agregar etiquetas para dar mayor claridad a la diferencia de las cifras.
+
+```{r}
+ggplot(df_mg, aes(x = age_group, y = proporcion, fill = edo_civil)) +
+  geom_bar(stat = 'identity', position = 'stack') +
+  geom_text(aes(label = etiqueta),
+            position = position_stack(vjust = 0.5),
+            size = 3) +
+  labs(title = "Estado civil por sexo y rango de edad",
+       fill = "Estado Civil",
+       x = element_blank(),
+       y = element_blank()) +
+  facet_grid(sex~.) +
+  theme_light()
+
+
+```
+
+$~$
+
+#### 4. Regresando a los datos que obtuviste en 2, une la tabla de datos con `df_edu`, ¿qué variables se usarán para unir?
+
+```{r}
+
+left_join(df_ml, df_edu)
+
+```
+ 
+ Las variables que se usan para unir son `state_code`, `municipio_code`, `region`, `state_name`, `state_abbr`, `municipio_name` y  `sex`.
