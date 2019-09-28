@@ -2,8 +2,7 @@
 title: "EstComp-Tarea05"
 author: "Bruno C. Gonzalez"
 date: "15/9/2019"
-output:
-  html_document: default
+output: github_document
 ---
 # 5. Bootstrap {-}
 
