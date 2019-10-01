@@ -1,0 +1,202 @@
+Tabla VIVIENDAS,,,,,
+,,,,,
+#,Variable,Descripción,Tipo,Categorías,
+,,,,valor,etiqueta o rango
+1,folioviv,"Identificador de la vivienda compuesto por dos dígitos con la clave de la entidad federativa, uno con el ámbito (urbano, código diferente a 6; rural, código 6), cuatro dígitos del número consecutivo de la upm, un dígito de la decena de levantamiento y dos dígitos con un número consecutivo para la vivienda seleccionada.",C (10),,
+2,tipo_viv,Clase de vivienda particular.,C (1),,"{1,...,5}"
+,,,,1,Casa independiente
+,,,,2,Departamento en edificio
+,,,,3,Vivienda en vecindad
+,,,,4,Vivienda en cuarto de azotea
+,,,,5,Local no construido para habitación
+3,mat_pared,Material predominante en las paredes de la vivienda.,C (1),,"{1,...,8}"
+,,,,1,Material de desecho
+,,,,2,Lámina de cartón
+,,,,3,Lámina de asbesto o metálica
+,,,,4,Carrizo bambú o palma
+,,,,5,Embarro o bajareque
+,,,,6,Madera
+,,,,7,Adobe
+,,,,8,"Tabique, ladrillo, block, piedra, cantera, cemento o concreto"
+4,mat_techos,Material predominante en el techo de la vivienda.,C (2),,"{01,...,10}"
+,,,,1,Material de desecho
+,,,,2,Lámina de cartón
+,,,,3,Lámina metálica
+,,,,4,Lámina de asbesto
+,,,,5,Lámina de fibrocemento ondulada (techo fijo)
+,,,,6,Palma o paja
+,,,,7,Madera o tejamanil
+,,,,8,Terrado con viguería
+,,,,9,Teja
+,,,,10,Losa de concreto o viguetas con bovedilla
+5,mat_pisos,Material predominante en el piso de la vivienda.,C (1),,"{1,...,3}"
+,,,,1,Tierra
+,,,,2,Cemento o firme
+,,,,3,"Madera, mosaico u otro recubrimiento"
+6,antiguedad,Tiempo que tiene la vivienda de haber sido construida.,N (2),,"{0,...,99}"
+7,antigua_ne,No sabe la antigüedad de la vivienda,C (1),,{1}
+,,,,1,No sabe
+8,cocina,"Cuarto de la vivienda dispuesto para preparar o calentar alimentos, aunque también tenga otros usos.",C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+9,cocina_dor,Cocina utilizada de manera habitual también para dormir.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+10,cuart_dorm,"Número de cuartos de la vivienda que son usados habitualmente para dormir, aunque también tengan otros usos.",N (2),,
+11,num_cuarto,"Número total de cuartos que tiene la vivienda, independientemente de su uso.",N (2),,
+12,disp_agua,"Formas de abastecer el agua a la vivienda ya sea que se cuente o no, con agua entubada de la red pública.",C (1),,"{1,...,7}"
+,,,,1,Agua entubada dentro de la vivienda
+,,,,2,"Agua entubada fuera de la vivienda, pero dentro del terreno"
+,,,,3,Agua entubada de llave pública (o hidrante)
+,,,,4,Captadores de agua de lluvia
+,,,,5,Agua entubada que acarrean de otra vivienda
+,,,,6,Agua de pipa
+,,,,7,"Agua de un pozo, río, lago, arroyo u otra"
+13,dotac_agua,Frecuencia con la que llega a la vivienda el agua entubada que proviene de la red pública.,C (1),,"{1,...,5}"
+,,,,1,Diario
+,,,,2,Cada tercer día
+,,,,3,Dos veces por semana
+,,,,4,Una vez por semana
+,,,,5,De vez en cuando
+14,excusado,Instalación sanitaria o excusado en la vivienda para el desalojo de los desechos humanos.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+15,uso_compar,Uso compartido de la instalación sanitaria con los habitantes de otra vivienda.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+16,sanit_agua,Funcionamiento de la instalación sanitaria con o sin conexión de agua.,C (1),,"{1,...,3}"
+,,,,1,Tiene descarga directa de agua
+,,,,2,Le echan agua con cubeta
+,,,,3,No se le puede echar agua
+17,biodigest,Disponibilidad de biodigestor conectado al servicio sanitario.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+18,bano_comp,Número de baños con excusado y regadera.,N (1),,
+19,bano_excus,Número de baños sólo con excusado.,N (1),,
+20,bano_regad,Número de baños sólo con regadera.,N (1),,
+21,drenaje,Disponibilidad de un sistema de drenaje para desalojar de la vivienda los desechos humanos y las aguas utilizadas.,C (1),,"{1,...,5}"
+,,,,1,La red pública
+,,,,2,Una fosa séptica
+,,,,3,Una tubería que va a dar a una barranca o grieta
+,,,,4,"Una tubería que va a dar a un río, lago o mar"
+,,,,5,No tiene drenaje
+22,disp_elect,Fuente de donde se obtiene la energía eléctrica en la vivienda.,C (1),,"{1,...,5}"
+,,,,1,Del servicio público
+,,,,2,De una planta particular
+,,,,3,De panel solar
+,,,,4,De otra fuente
+,,,,5,No tiene luz eléctrica
+23,focos_inca,"Número de focos incandescentes que se usan para iluminar la vivienda, tanto en el interior como en el exterior.",N (2),,
+24,focos_ahor,"Número de focos ahorradores que se usan para iluminar la vivienda, tanto en el interior como en el exterior.",N (2),,
+25,combustible,Combustible más utilizado para preparar o calentar alimentos en la vivienda.,C (1),,"{1,...,6}"
+,,,,1,Leña
+,,,,2,Carbón
+,,,,3,Gas de tanque
+,,,,4,Gas natural o de tubería
+,,,,5,Electricidad
+,,,,6,Otro combustible
+26,estufa_chi,Presencia de chimenea para desalojar el humo al cocinar.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+27,eli_basura,Formas de eliminar la basura de la vivienda.,C (1),,"{1,...,8}"
+,,,,1,La recoge un camión o carrito de basura
+,,,,2,La tiran en el basurero público
+,,,,3,La tiran en un contenedor o depósito
+,,,,4,La queman
+,,,,5,La entierran
+,,,,6,La tiran en un terreno baldío o calle
+,,,,7,La tiran en barranca o grieta
+,,,,8,"La tiran al río, lago o mar"
+28,tenencia,Dominio o posesión legal de la vivienda por sus ocupantes.,C (1),,"{1,...,6}"
+,,,,1,Es rentada
+,,,,2,Es prestada
+,,,,3,Es propia pero la están pagando
+,,,,4,Es propia
+,,,,5,Está intestada o en litigio
+,,,,6,Otra situación
+29,renta,Monto de la renta mensual.,N (9),,
+30,estim_pago,Valor estimado del alquiler mensual de la vivienda que habita el hogar.,N (9),,
+31,pago_viv,Monto del pago mensual por la vivienda,N (9),,
+32,pago_mesp,Pago por la vivienda el mes pasado.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+33,tipo_adqui,Situación de la vivienda al momento de adquirirla.,C (1),,"{1,...,4}"
+,,,,1,La compró hecha
+,,,,2,La mandó construir
+,,,,3,La construyó él mismo
+,,,,4,La obtuvo de otra manera
+34,viv_usada,Estado de la vivienda al momento de adquirirla.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+35,tipo_finan,"Tipo de financiamiento, en su caso, utilizado para pagar, construir, ampliar, o modifica la vivienda.",C (1),,"{1,...,5}"
+,,,,1,"Le dió crédito el INFONAVIT, FOVISSSTE o FONHAPO"
+,,,,2,"Le dió crédito un banco, sofol o caja de ahorro"
+,,,,3,Le dió crédito otra institución
+,,,,4,"Le prestó un familiar, amigo o prestamista"
+,,,,5,Usó sus propios recursos
+36,num_dueno1,Número de renglón del dueño o dueña de la vivienda.,C (2),,
+37,hog_dueno1,Número de hogar del dueño o dueña de la vivienda.,C (1),,
+38,num_dueno2,Número de renglón del segundo dueño o dueña de la vivienda.,C (2),,
+39,hog_dueno2,Número de hogar del segundo dueño o dueña de la vivienda.,C (1),,
+40,escrituras,Escrituras o título de propiedad de la vivienda.,C (1),,"{1,...,4}"
+,,,,1,A nombre del dueño
+,,,,2,A nombre de otra persona
+,,,,3,No tiene escrituras
+,,,,4,No sabe
+41,lavadero,Lavadero.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+42,fregadero,Fregadero o tarja.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+43,regadera,Regadera.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+44,tinaco_azo,Tinaco en la azotea.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+45,cisterna,Cisterna o aljibe.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+46,pileta,"Pileta, tanque o depósito de agua.",C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+47,calent_sol,Calentador de agua solar.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+48,calent_gas,Calentador de gas u otros.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+49,medidor_luz,Medidor de luz.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+50,bomba_agua,Bomba de agua.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+51,tanque_gas,Tanque de gas estacionario.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+52,aire_acond,Aire acondicionado.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+53,calefacc,Calefacción.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+54,tot_resid,Número de personas que habitan la vivienda.,N (2),,
+55,tot_hom,Número de personas hombres que habitan en la vivienda.,N (2),,
+56,tot_muj,Número de personas mujeres que habitan en la vivienda.,N (2),,
+57,tot_hog,Total de hogares en la vivienda.,N (1),,
+58,ubica_geo,"Contiene la ubicación geográfica de la vivienda. Los dos primeros dígitos representan la clave de la entidad y los siguientes tres la clave del municipio. Éstas corresponden al Catálogo de claves de entidades federativas, municipios y localidades, que está disponible en el sitio del INEGI.",C (5),,
+59,tam_loc,Tamaño de la localidad por número de habitantes.,C (1),,"{1,...,4}"
+,,,,1,Localidades con 100 000 y más habitantes
+,,,,2,Localidades con 15 000 a 99 999 habitantes
+,,,,3,Localidades con 2 500 a 14 999 habitantes
+,,,,4,Localidades con menos de 2 500 habitantes
+60,est_socio,"Clasificación de las viviendas del país de acuerdo a ciertas características socioeconómicas de las personas que las habitan, así como características físicas y el equipamiento de las mismas expresadas por medio de 24 indicadores construidos con información del Censo de Población y Vivienda 2010. Esta estratificación se realizó por medio de métodos estadísticos multivariados.",C (1),,"{1,...,4}"
+,,,,1,Bajo
+,,,,2,Medio bajo
+,,,,3,Medio alto
+,,,,4,Alto
+61,est_dis,Son los estratos seleccionados en la segunda etapa del muestreo y corresponden a grupos de UPMs de acuerdo con su estrato geográfico (entidad-ámbito-zona).,C (3),,
+62,upm,"Las unidades primarias de muestreo están constituidas por agrupaciones de viviendas con características diferenciadas dependiendo del ámbito al que pertenecen. Estas unidades son seleccionadas en la primera etapa del muestreo y corresponden a áreas geográficas con límites identificables en el terreno que agrupan un conjunto de viviendas, cuyo número depende del tamaño de las localidades.",C (5),,
+63,factor,Factor de expansión.,N (5),,

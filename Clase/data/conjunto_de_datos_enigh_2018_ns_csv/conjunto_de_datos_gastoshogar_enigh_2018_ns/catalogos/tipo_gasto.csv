@@ -1,0 +1,8 @@
+tipo_gasto,descripcion
+G1,Gasto monetario en bienes y servicios para el hogar
+G2,Gasto monetario en bienes y servicios para otro hogar
+G3,Gasto no monetario procedente de autoconsumo
+G4,Gasto no monetario por remuneraciones en especie
+G5,Gasto no monetario por regalos recibidos de otro hogar
+G6,Gasto no monetario por transferencias de instituciones
+G7,Gasto imputado por estimación del alquiler

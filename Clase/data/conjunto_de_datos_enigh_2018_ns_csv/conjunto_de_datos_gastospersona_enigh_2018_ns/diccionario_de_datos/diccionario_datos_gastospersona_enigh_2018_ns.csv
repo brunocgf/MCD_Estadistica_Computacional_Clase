@@ -1,0 +1,81 @@
+Tabla  GASTOSPERSONA,,,,,
+,,,,,
+#,Variable,Descripción,Tipo,Categorías,
+,,,,valor,etiqueta ó rango
+1,folioviv,"Identificador de la vivienda compuesto por dos dígitos con la clave de la entidad federativa, uno con el ámbito (urbano, código diferente a 6; rural, código 6), cuatro dígitos del número consecutivo de la upm, un dígito de la decena de levantamiento y dos dígitos con un número consecutivo para la vivienda seleccionada.",C (10),,
+2,foliohog,El código 1 identifica al hogar principal y del 2 al 5 los hogares adicionales.,C (1),,
+3,numren,Número consecutivo en el registro de personas integrantes del hogar.,C (2),,
+4,clave,"Destino del gasto mensual, trimestral y semestral.",C (4),,Catálogo de gastos  
+5,tipo_gasto,Tipo de gasto monetario y no monetario.,C (2),,"{G1,G4}"
+,,,,G1,Gasto monetario en bienes y servicios para el hogar
+,,,,G4,Gasto no monetario por remuneraciones en especie
+6,mes_dia,Mes y día en la que se realizó la compra.,C (4),,Catálogo de mes y día
+7,frec_rem,Frecuencia que recibe en remuneraciones el hogar.,C (1),,"{1,...,9}"
+,,,,1,Una vez a la semana
+,,,,2,Dos veces a la semana
+,,,,3,Tres veces a la semana
+,,,,4,Cuatro veces a la semana
+,,,,5,Cinco veces a la semana
+,,,,6,Seis veces a la semana
+,,,,7,Una vez a la quincena
+,,,,8,Una vez al mes
+,,,,9,Otros
+8,inst,Nombre de la institución pública o privada que proporciona los productos y servicios para el cuidado de la salud.,C (2),,"{01,...,13}"
+,,,,1,"Médicos, laboratorios y hospitales particulares"
+,,,,2,Servicios médicos del IMSS
+,,,,3,Servicios médicos del ISSSTE
+,,,,4,Servicios médicos de PEMEX
+,,,,5,Servicios médicos del la Marina
+,,,,6,Servicios médicos del Ejército
+,,,,7,Servicios médicos de la SSA
+,,,,8,SSA con Seguro Popular
+,,,,9,Servicios médicos del DIF
+,,,,10,Servicios médicos de universidades públicas
+,,,,11,"Otros servicios médicos:Cruz Roja, Cruz Verde, etcétera."
+,,,,12,"Servicios médicos provenientes del programa PROGRESA, OPORTUNIDADES o PROSPERA"
+,,,,13,Provenientes de otro hogar
+9,forma_pag1,Forma en la que se pagaron los artículos o servicios.,C (2),,"{00,...,10}"
+,,,,0,No aplica
+,,,,1,Efectivo
+,,,,2,Fiado (persona particular o establecimiento comercial)
+,,,,3,Domiciliación
+,,,,4,Transferencia electrónica de fondos
+,,,,5,Tarjeta de crédito
+,,,,6,Tarjeta de débito
+,,,,7,Cheque
+,,,,8,Vale
+,,,,9,Pago móvil
+,,,,10,Otro
+10,forma_pag2,Forma en la que se pagaron los artículos o servicios.,C (2),,"{00,...,10}"
+,,,,0,No aplica
+,,,,1,Efectivo
+,,,,2,Fiado (persona particular o establecimiento comercial)
+,,,,3,Domiciliación
+,,,,4,Transferencia electrónica de fondos
+,,,,5,Tarjeta de crédito
+,,,,6,Tarjeta de débito
+,,,,7,Cheque
+,,,,8,Vale
+,,,,9,Pago móvil
+,,,,10,Otro
+11,forma_pag3,Forma en la que se pagaron los artículos o servicios.,C (2),,"{00,...,10}"
+,,,,0,No aplica
+,,,,1,Efectivo
+,,,,2,Fiado (persona particular o establecimiento comercial)
+,,,,3,Domiciliación
+,,,,4,Transferencia electrónica de fondos
+,,,,5,Tarjeta de crédito
+,,,,6,Tarjeta de débito
+,,,,7,Cheque
+,,,,8,Vale
+,,,,9,Pago móvil
+,,,,10,Otro
+12,inscrip,Gasto mensual que realizo en inscripciones.,N (9),,
+13,colegia,Gasto mensual que realizo en colegiaturas.,N (9),,
+14,material,Gasto mensual que realizo en material educativo.,N (9),,
+15,cantidad,Cantidad y/o forma de presentación de los artículos o servicios.,"N (10,3)",,
+16,gasto,"Gasto efectuado en alimentos, bebidas y/o tabaco.","N (10,2)",,
+17,costo,"Costo o valor del producto, artículo o servicio que se acordó entre los integrantes del hogar y los proveedores en los periodos de referencias e independientemente de si se haya o no cubierto la totalidad o parte del pago en estos mismos lapsos.","N (10,2)",,
+18,gasto_tri,Gasto trimestral normalizado de acuerdo a la decena de levantamiento.,"N (12,2)",,
+19,gasto_nm,Gasto realizado por el producto o servicio obtenido.,"N (10,2)",,
+20,gas_nm_tri,Gasto no monetario trimestral normalizado de acuerdo a la decena de levantamiento.,"N (12,2)",,

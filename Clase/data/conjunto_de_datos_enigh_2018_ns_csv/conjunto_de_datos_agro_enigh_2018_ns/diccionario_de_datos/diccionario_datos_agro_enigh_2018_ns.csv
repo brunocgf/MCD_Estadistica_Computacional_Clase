@@ -1,0 +1,121 @@
+Tabla  AGRO,,,,,
+,,,,,
+#,Variable,Descripción,Tipo,Categorías,
+,,,,valor,etiqueta o rango
+1,folioviv,"Identificador de la vivienda compuesto por dos dígitos con la clave de la entidad federativa, uno con el ámbito (urbano, código diferente a 6; rural, código 6), cuatro dígitos del número consecutivo de la upm, un dígito de la decena de levantamiento y dos dígitos con un número consecutivo para la vivienda seleccionada.",C (10),,
+2,foliohog,El código 1 identifica al hogar principal y del 2 al 5 los hogares adicionales.,C (1),,
+3,numren,Número consecutivo en el registro de personas integrantes del hogar.,C (2),,
+4,id_trabajo,Identificador del trabajo.,C (1),,"{1,2}"
+,,,,1,Trabajo principal
+,,,,2,Trabajo secundario
+5,tipoact,"Actividad económica a la que se dedica la empresa, negocio o institución.",C (1),,"{4,...,9}"
+,,,,4,Actividades agrícolas
+,,,,5,Actividades de cría y explotación de animales
+,,,,6,Actividades de recolección
+,,,,7,Reforestación y tala de arboles
+,,,,8,Actividades de caza y captura de animales
+,,,,9,Actividades de pesca
+6,cose_cria,El informante realizó o no esta actividad durante el periodo de referencia.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+7,prep_deriv,Preparación de tierras u obtención de derivados.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+8,otro_pago,Forma de pago alterna en negocio.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+9,fpago_1,Forma de pago alterna en negocio.,C (1),,{1}
+,,,,1,Domiciliación
+10,fpago_2,Forma de pago alterna en negocio.,C (1),,{2}
+,,,,2,Transferencia electrónica de fondos
+11,fpago_3,Forma de pago alterna en negocio.,C (1),,{3}
+,,,,3,Tarjeta de crédito
+12,fpago_4,Forma de pago alterna en negocio.,C (1),,{4}
+,,,,4,Tarjeta de débito
+13,fpago_5,Forma de pago alterna en negocio.,C (1),,{5}
+,,,,5,Cheque
+14,fpago_6,Forma de pago alterna en negocio.,C (1),,{6}
+,,,,6,Vale
+15,fpago_7,Forma de pago alterna en negocio.,C (1),,{7}
+,,,,7,Pago móvil
+16,fpago_8,Forma de pago alterna en negocio.,C (1),,{8}
+,,,,8,Otra forma de pago
+17,nofpago,Motivo por el cual no acepta forma de pago alterna.,C (1),,"{1,…,7}"
+,,,,1,Tamaño del negocio
+,,,,2,Desconocimiento de otras modalidades
+,,,,3,Por costos de operación
+,,,,4,Falta de infraestructura o equipo
+,,,,5,Desconfianza de otras formas de pago
+,,,,6,No lo cree necesario
+,,,,7,Otro
+18,t_emp,"Número total de personas que participaron para desarrollar la actividad del negocio o de la cooperativa; independientemente del parentesco familiar o de la edad, si son remunerados o no y si son trabajadores contratados de manera verbal o escrita, durante el mes pasado.",N (2),,
+19,h_emp,"Número total de hombres que participaron para desarrollar la actividad del negocio o de la cooperativa; independientemente del parentesco familiar o de la edad, si son remunerados o no y si son trabajadores contratados de manera verbal o escrita, durante el mes pasado.",N (2),,
+20,m_emp,"Número total de mujeres que participaron para desarrollar la actividad del negocio o de la cooperativa; independientemente del parentesco familiar o de la edad, si son remunerados o no y si son trabajadores contratados de manera verbal o escrita, durante el mes pasado.",N (2),,
+21,t_cpago,"El total de personas, que el empleador contrató y que recibieron una remuneración monetaria o en especie como salario, propina o comisión por su trabajo durante el mes pasado.",N (2),,
+22,h_cpago,"El total de hombres, que el empleador contrató y que recibieron una remuneración monetaria o en especie como salario, propina o comisión por su trabajo durante el mes pasado.",N (2),,
+23,m_cpago,"El total de mujeres, que el empleador contrató y que recibieron una remuneración monetaria o en especie como salario, propina o comisión por su trabajo durante el mes pasado.",N (2),,
+24,t_ispago,"El total de trabajadores, incluidos los menores de 12 años y los socios que laboraron en las actividades del negocio o cooperativa sin recibir ningún pago durante el mes pasado y que son integrantes del hogar.",N (2),,
+25,h_ispago,"El total de hombres, incluidos los menores de 12 años y los socios que laboraron en las actividades del negocio o cooperativa sin recibir ningún pago durante el mes pasado y que son integrantes del hogar.",N (2),,
+26,m_ispago,"El total de mujeres, incluidas las menores de 12 años y las socias que laboraron en las actividades del negocio o cooperativa sin recibir ningún pago durante el mes pasado y que son integrantes del hogar.",N (2),,
+27,t_nispago,"El total de trabajadores, incluidos los menores de 12 años y los socios que laboraron en las actividades del negocio o cooperativa sin recibir ningún pago durante el mes pasado y que no son integrantes del hogar.",N (2),,
+28,h_nispago,"El total de hombres, incluidos los menores de 12 años y los socios que laboraron en las actividades del negocio o cooperativa sin recibir ningún pago durante el mes pasado y que no son integrantes del hogar.",N (2),,
+29,m_nispago,"El total de mujeres, incluidas las menores de 12 años y las socias que laboraron en las actividades del negocio o cooperativa sin recibir ningún pago durante el mes pasado y que no son integrantes del hogar.",N (2),,
+30,valrema,Valor estimado de los cultivos o productos que le quedaron al informante el último día del mes pasado y que aún no determinaba su uso.,N (9),,
+31,valproc,"Valor estimado de los cultivos o productos que se encontraban en crecimiento o desarrollo, el último día del mes pasado.",N (9),,
+32,apoyo,Apoyo para el negocio o cooperativa.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+33,apoyo_1,Apoyo del gobierno federal con el compromiso de pagarlo.,N (9),,
+34,apoyo_2,Apoyo del gobierno estatal con el compromiso de pagarlo.,N (9),,
+35,apoyo_3,Apoyo del gobierno municipal con el compromiso de pagarlo.,N (9),,
+36,apoyo_4,Apoyo del gobierno federal sin el compromiso de pagarlo.,N (9),,
+37,apoyo_5,Apoyo del gobierno estatal sin el compromiso de pagarlo.,N (9),,
+38,apoyo_6,Apoyo del gobierno municipal sin el compromiso de pagarlo.,N (9),,
+39,apoyo_7,Apoyo de instituciones no gubernamentales con el compromiso de pagarlo.,N (9),,
+40,apoyo_8,Apoyo de instituciones no gubernamentales sin el compromiso de pagarlo.,N (9),,
+41,procampo,Apoyo para los negocios recibido del programa PROCAMPO,N (9),,
+42,mesproc,Mes en el cual recibió el apoyo de PROCAMPO.,C (2),,"{01,...,12}"
+,,,,1,Enero
+,,,,2,Febrero
+,,,,3,Marzo
+,,,,4,Abril
+,,,,5,Mayo
+,,,,6,Junio
+,,,,7,Julio
+,,,,8,Agosto
+,,,,9,Septiembre
+,,,,10,Octubre
+,,,,11,Noviembre
+,,,,12,Diciembre
+43,progan,Apoyo para los negocios recibido del programa PROGAN.,N (9),,
+44,mesprogan,Mes en el cual recibió el apoyo de PROGAN.,C (2),,"{01,...,12}"
+,,,,1,Enero
+,,,,2,Febrero
+,,,,3,Marzo
+,,,,4,Abril
+,,,,5,Mayo
+,,,,6,Junio
+,,,,7,Julio
+,,,,8,Agosto
+,,,,9,Septiembre
+,,,,10,Octubre
+,,,,11,Noviembre
+,,,,12,Diciembre
+45,reg_not,La empresa está legalmente registrada como sociedad o cooperativa durante el periodo de referencia.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+46,reg_cont,Contabilidad sistemática de los ingresos y egresos de la unidad económica para diferenciar de manera precisa las ganancias del negocio.,C (1),,"{1,...,4}"
+,,,,1,Utiliza los servicios profesionales de un contador
+,,,,2,Utiliza la herramienta electrónica MIS CUENTAS proporcionada por SAT
+,,,,3,La realiza usted o algún familiar
+,,,,4,No realiza contabilidad
+47,ventas,Monto total de la venta de cada uno de los productos obtenidos.,N (10),,
+48,autocons,El valor estimado en pesos de la producción que destinó el informante para el consumo del hogar.,N (10),,
+49,otrosnom,Valor estimado de los productos de intercambio.,N (10),,
+50,gasneg,Gastos que tuvo el negocio en el periodo de referencia.,N (10),,
+51,ventas_tri,Ingreso trimestral por ventas normalizado dependiendo de la decena de levantamiento.,"N (12,2)",,
+52,auto_tri,Autoconsumo trimestral normalizado dependiendo de la decena de levantamiento.,"N (12,2)",,
+53,otros_tri,"Otros montos no monetarios trimestrales (pago de trabajadores, deudas del negocio, deudas del hogar e intercambios) normalizados dependiendo de la decena de levantamiento.","N (12,2)",,
+54,gasto_tri,Gasto trimestral del negocio normalizado dependiendo de la decena de levantamiento.,"N (12,2)",,
+55,ing_tri,Ingreso trimestral normalizado dependiendo de la decena de levantamiento.,"N (12,2)",,
+56,ero_tri,Erogaciones trimestrales normalizadas dependiendo de la decena de levantamiento.,"N (12,2)",,

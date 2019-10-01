@@ -1,0 +1,15 @@
+no_ing,descripcion
+1,Pago en especie
+2,No le han pagado
+3,Está contratado pero no ha iniciado sus actividades
+4,"Incapacidad temporal (enfermedad, accidente, etcétera)"
+5,"Falta de trabajo (cierre temporal de la empresa, negocio o comercio pero sin haber sido despedido)"
+6,Conflicto laboral o huelga
+7,Escasez de materiales y reparación del equipo para la producción o venta
+8,Está esperando continuar con las labores agrícolas
+9,Conflicto laboral o huelga
+10,Inicio de labores y no hay gastos ni ingresos
+11,Escasez de materiales y reparación del equipo para la producción o venta
+12,No ha tenido utilidades en el periodo de referencia
+13,El negocio obtuvo pérdidas
+99,Otras causas no consideradas en las anteriores

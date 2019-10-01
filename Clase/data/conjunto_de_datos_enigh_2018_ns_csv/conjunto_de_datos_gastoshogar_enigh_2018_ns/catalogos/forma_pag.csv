@@ -1,0 +1,12 @@
+forma_pag,descripcion
+0,No aplica
+1,Efectivo
+2,Fiado (persona particular o establecimiento comercial)
+3,Domiciliación
+4,Transferencia electrónica de fondos
+5,Tarjeta de crédito
+6,Tarjeta de débito
+7,Cheque
+8,Vale
+9,Pago móvil
+10,Otro

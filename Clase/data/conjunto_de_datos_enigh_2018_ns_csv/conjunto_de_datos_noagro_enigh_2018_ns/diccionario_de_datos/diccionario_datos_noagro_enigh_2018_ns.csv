@@ -1,0 +1,190 @@
+Tabla  NOAGRO,,,,,
+,,,,,
+#,Variable,Descripción,Tipo,Categorías,
+,,,,valor,etiqueta o rango
+1,folioviv,"Identificador de la vivienda compuesto por dos dígitos con la clave de la entidad federativa, uno con el ámbito (urbano, código diferente a 6; rural, código 6), cuatro dígitos del número consecutivo de la upm, un dígito de la decena de levantamiento y dos dígitos con un número consecutivo para la vivienda seleccionada.",C (10),,
+2,foliohog,El código 1 identifica al hogar principal y del 2 al 5 los hogares adicionales.,C (1),,
+3,numren,Número consecutivo en el registro de personas integrantes del hogar.,C (2),,
+4,id_trabajo,Identificador del trabajo.,C (1),,"{1,2}"
+,,,,1,Trabajo principal
+,,,,2,Trabajo secundario
+5,tipoact,"Actividad económica a la que se dedica la empresa, negocio o institución.",C (1),,"{1,...,3}"
+,,,,1,Industrial
+,,,,2,Compra-Venta
+,,,,3,Servicios
+6,numesta,Cantidad de puestos o establecimientos que conforman el negocio o empresa.,C (1),,"{1,...,3}"
+,,,,1,No tiene establecimiento
+,,,,2,Uno solo
+,,,,3,Más de uno
+7,totesta,Total de puestos o establecimientos con que cuenta el negocio o empresa.,N (2),,
+8,lugact,Lugar donde se llevaron a cabo las actividades de la empresa o negocio.,C (1),,"{1,...,9}"
+,,,,1,"En su domicilio, sin una instalación especial"
+,,,,2,"En su domicilio, con una instalación especial"
+,,,,3,Ambulante de casa en casa o en la calle
+,,,,4,Puesto improvisado en la vía pública
+,,,,5,En el domicilio de los clientes
+,,,,6,En puesto fijo en la calle
+,,,,7,En puesto semifijo
+,,,,8,En el campo a cielo abierto
+,,,,9,Otro lugar no mencionado anteriormente
+9,socios,Hay socios del negocio que no son integrantes del hogar.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+10,numsocio,Total de socios que no pertenecen al hogar,N (2),,
+11,phogar1,Porcentaje de ganancias del negocio durante el mes pasado.,N (2),,
+12,mismop,Porcentaje de ganancias que se quedó el hogar.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+13,mes_2,Mes de referencia para el porcentaje de ganancias con el que se quedó el hogar.,C (2),,"{06,...,09}"
+,,,,6,Junio
+,,,,7,Julio
+,,,,8,Agosto
+,,,,9,Septiembre
+14,mes_3,Mes de referencia para el porcentaje de ganancias con el que se quedó el hogar.,C (2),,"{05,...,08}"
+,,,,5,Mayo
+,,,,6,Junio
+,,,,7,Julio
+,,,,8,Agosto
+15,mes_4,Mes de referencia para el porcentaje de ganancias con el que se quedó el hogar.,C (2),,"{04,...,07}"
+,,,,4,Abril
+,,,,5,Mayo
+,,,,6,Junio
+,,,,7,Julio
+16,mes_5,Mes de referencia para el porcentaje de ganancias con el que se quedó el hogar.,C (2),,"{03,...,06}"
+,,,,3,Marzo
+,,,,4,Abril
+,,,,5,Mayo
+,,,,6,Junio
+17,mes_6,Mes de referencia para el porcentaje de ganancias con el que se quedó el hogar.,C (2),,"{02,...,05}"
+,,,,2,Febrero
+,,,,3,Marzo
+,,,,4,Abril
+,,,,5,Mayo
+18,phogar2,Porcentaje de ganancias del negocio durante el mes 2.,N (2),,
+19,phogar3,Porcentaje de ganancias del negocio durante el mes 3.,N (2),,
+20,phogar4,Porcentaje de ganancias del negocio durante el mes 4.,N (2),,
+21,phogar5,Porcentaje de ganancias del negocio durante el mes 5.,N (2),,
+22,phogar6,Porcentaje de ganancias del negocio durante el mes 6.,N (2),,
+23,otro_pago,Forma de pago alterna en negocio.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+24,fpago_1,Forma de pago alterna en negocio.,C (1),,{1}
+,,,,1,Domiciliación
+25,fpago_2,Forma de pago alterna en negocio.,C (1),,{2}
+,,,,2,Transferencia electrónica de fondos
+26,fpago_3,Forma de pago alterna en negocio.,C (1),,{3}
+,,,,3,Tarjeta de crédito
+27,fpago_4,Forma de pago alterna en negocio.,C (1),,{4}
+,,,,4,Tarjeta de débito
+28,fpago_5,Forma de pago alterna en negocio.,C (1),,{5}
+,,,,5,Cheque
+29,fpago_6,Forma de pago alterna en negocio.,C (1),,{6}
+,,,,6,Vale
+30,fpago_7,Forma de pago alterna en negocio.,C (1),,{7}
+,,,,7,Pago móvil
+31,fpago_8,Forma de pago alterna en negocio.,C (1),,{8}
+,,,,8,Otro
+32,nofpago,Motivo por el cual no acepta forma de pago alterna.,C (1),,"{1,…,7}"
+,,,,1,Tamaño del negocio
+,,,,2,Desconocimiento de otras modalidades
+,,,,3,Por costos de operación
+,,,,4,Falta de infraestructura o equipo
+,,,,5,Desconfianza de otras formas de pago
+,,,,6,No lo cree necesario
+,,,,7,Otro
+33,t_emp,Número total de personas que participaron para desarrollar la actividad del negocio o de la cooperativa.,N (2),,
+34,h_emp,Número de hombres que participaron para desarrollar la actividad del negocio o de la cooperativa.,N (2),,
+35,m_emp,Número de Mujeres que participaron para desarrollar la actividad del negocio o de la cooperativa.,N (2),,
+36,t_cpago,"Total de personas, que el empleador contrató y que recibieron una remuneración monetaria o en especie como salario, propina o comisión por su trabajo durante el mes pasado.",N (2),,
+37,h_cpago,"Total de hombres que el empleador contrató y que recibieron una remuneración monetaria o en especie como salario, propina o comisión por su trabajo durante el mes pasado.",N (2),,
+38,m_cpago,"Total de mujeres que el empleador contrató y que recibieron una remuneración monetaria o en especie como salario, propina o comisión por su trabajo durante el mes pasado.",N (2),,
+39,t_ispago,Total de trabajadores incluidos los menores de 12 años y los socios que laboraron en las actividades del negocio o cooperativa sin recibir ningún pago durante el mes pasado y que son integrantes del hogar.,N (2),,
+40,h_ispago,Total de hombres incluidos los menores de 12 años y los socios que laboraron en las actividades del negocio o cooperativa sin recibir ningún pago durante el mes pasado y que son integrantes del hogar.,N (2),,
+41,m_ispago,Total de mujeres incluidas las menores de 12 años y los socios que laboraron en las actividades del negocio o cooperativa sin recibir ningún pago durante el mes pasado y que son integrantes del hogar.,N (2),,
+42,t_nispago,Total de trabajadores incluidos los menores de 12 años y los socios que laboraron en las actividades del negocio o cooperativa sin recibir ningún pago durante el mes pasado y que NO son integrantes del hogar.,N (2),,
+43,h_nispago,Total de hombres incluidos los menores de 12 años y los socios que laboraron en las actividades del negocio o cooperativa sin recibir ningún pago durante el mes pasado y que NO son integrantes del hogar.,N (2),,
+44,m_nispago,Total de mujeres incluidas las menores de 12 años y los socios que laboraron en las actividades del negocio o cooperativa sin recibir ningún pago durante el mes pasado y que NO son integrantes del hogar.,N (2),,
+45,autocons,"Consumo por parte del hogar, de los bienes producidos o comercializados por algunos de sus integrantes y por los que no se ha pagado ningún valor.",C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+46,enproduc,Valor de los productos que aún no terminaban el último día del mes pasado.,N (9),,
+47,novend,Valor de las mercancías que aún no habían sido vendidas el último día del mes pasado en los negocios industriales.,N (9),,
+48,consinter,Valor de los productos o servicios producidos por el negocio y que se utilizarán para elaborar otros productos terminados el último día del mes pasado.,N (9),,
+49,peract,"Las épocas o periodos del año en los que el patrón, trabajador por cuenta propia y cooperativista realizó las actividades del negocio del hogar.",C (1),,"{1,...,3}"
+,,,,1,La inició este año
+,,,,2,La realiza solo algunas épocas del año
+,,,,3,La realiza durante todo el año
+50,mesact_1,"Mes del año en el cual el patrón, cuanta propia y cooperativista realizó la actividad.",C (2),,{01}
+,,,,1,Enero
+51,mesact_2,"Mes del año en el cual el patrón, cuanta propia y cooperativista realizó la actividad.",C (2),,{02}
+,,,,2,Febrero
+52,mesact_3,"Mes del año en el cual el patrón, cuanta propia y cooperativista realizó la actividad.",C (2),,{03}
+,,,,3,Marzo
+53,mesact_4,"Mes del año en el cual el patrón, cuanta propia y cooperativista realizó la actividad.",C (2),,{04}
+,,,,4,Abril
+54,mesact_5,"Mes del año en el cual el patrón, cuanta propia y cooperativista realizó la actividad.",C (2),,{05}
+,,,,5,Mayo
+55,mesact_6,"Mes del año en el cual el patrón, cuanta propia y cooperativista realizó la actividad.",C (2),,{06}
+,,,,6,Junio
+56,mesact_7,"Mes del año en el cual el patrón, cuanta propia y cooperativista realizó la actividad.",C (2),,{07}
+,,,,7,Julio
+57,mesact_8,"Mes del año en el cual el patrón, cuanta propia y cooperativista realizó la actividad.",C (2),,{08}
+,,,,8,Agosto
+58,mesact_9,"Mes del año en el cual el patrón, cuanta propia y cooperativista realizó la actividad.",C (2),,{09}
+,,,,9,Septiembre
+59,mesact_10,"Mes del año en el cual el patrón, cuanta propia y cooperativista realizó la actividad.",C (2),,{10}
+,,,,10,Octubre
+60,mesact_11,"Mes del año en el cual el patrón, cuanta propia y cooperativista realizó la actividad.",C (2),,{11}
+,,,,11,Noviembre
+61,mesact_12,"Mes del año en el cual el patrón, cuanta propia y cooperativista realizó la actividad.",C (2),,{12}
+,,,,12,Diciembre
+62,reg_not,La empresa está legalmente registrada como sociedad o cooperativa durante el periodo de referencia.,C (1),,"{1,2}"
+,,,,1,Sí
+,,,,2,No
+63,reg_cont,Negocio que cuenta con un registro contable teniendo un contador para hacerlo.,C (1),,"{1,…,4}"
+,,,,1,Utiliza los servicios profesionales de un contador
+,,,,2,Utiliza la herramienta electrónica MIS CUENTAS proporcionada por SAT
+,,,,3,La realiza usted o algún familiar
+,,,,4,No realiza contabilidad
+64,ventas1,"Subtotal de las ventas que recibieron por su negocio industrial, comercial y de servicios, en el primer mes de referencia.","N (13,2)",,
+65,ventas2,"Subtotal de las ventas que recibieron por su negocio industrial, comercial y de servicios, en el segundo mes de referencia.","N (13,2)",,
+66,ventas3,"Subtotal de las ventas que recibieron por su negocio industrial, comercial y de servicios, en el tercer mes de referencia.","N (13,2)",,
+67,ventas4,"Subtotal de las ventas que recibieron por su negocio industrial, comercial y de servicios, en el cuarto mes de referencia.","N (13,2)",,
+68,ventas5,"Subtotal de las ventas que recibieron por su negocio industrial, comercial y de servicios, en el quinto mes de referencia.","N (13,2)",,
+69,ventas6,"Subtotal de las ventas que recibieron por su negocio industrial, comercial y de servicios, en el sexto mes de referencia.","N (13,2)",,
+70,autocons1,"Valor estimado de los artículos y/o servicios, que fueron tomados del negocio por los integrantes del hogar en el primer mes de referencia.","N (13,2)",,
+71,autocons2,"Valor estimado de los artículos y/o servicios, que fueron tomados del negocio por los integrantes del hogar en el segundo mes de referencia.","N (13,2)",,
+72,autocons3,"Valor estimado de los artículos y/o servicios, que fueron tomados del negocio por los integrantes del hogar en el tercer mes de referencia.","N (13,2)",,
+73,autocons4,"Valor estimado de los artículos y/o servicios, que fueron tomados del negocio por los integrantes del hogar en el cuarto mes de referencia.","N (13,2)",,
+74,autocons5,"Valor estimado de los artículos y/o servicios, que fueron tomados del negocio por los integrantes del hogar en el quinto mes de referencia.","N (13,2)",,
+75,autocons6,"Valor estimado de los artículos y/o servicios, que fueron tomados del negocio por los integrantes del hogar en el sexto mes de referencia.","N (13,2)",,
+76,otrosnom1,"Valor estimado de los productos de intercambio, en el primer mes de referencia.","N (13,2)",,
+77,otrosnom2,"Valor estimado de los productos de intercambio, en el segundo mes de referencia.","N (13,2)",,
+78,otrosnom3,"Valor estimado de los productos de intercambio, en el tercero mes de referencia.","N (13,2)",,
+79,otrosnom4,"Valor estimado de los productos de intercambio, en el cuarto mes de referencia.","N (13,2)",,
+80,otrosnom5,"Valor estimado de los productos de intercambio, en el quinto mes de referencia.","N (13,2)",,
+81,otrosnom6,"Valor estimado de los productos de intercambio, en el sexto mes de referencia.","N (13,2)",,
+82,gasneg1,"Total de gastos necesarios para el funcionamiento del negocio del hogar, que el patrón, el trabajador por cuenta propia o cooperativista los realizó, en el primer mes de referencia.","N (13,2)",,
+83,gasneg2,"Total de gastos necesarios para el funcionamiento del negocio del hogar, que el patrón, el trabajador por cuenta propia o cooperativista los realizó, en el segundo mes de referencia.","N (13,2)",,
+84,gasneg3,"Total de gastos necesarios para el funcionamiento del negocio del hogar, que el patrón, el trabajador por cuenta propia o cooperativista los realizó, en el tercer mes de referencia.","N (13,2)",,
+85,gasneg4,"Total de gastos necesarios para el funcionamiento del negocio del hogar, que el patrón, el trabajador por cuenta propia o cooperativista los realizó, en el cuarto mes de referencia.","N (13,2)",,
+86,gasneg5,"Total de gastos necesarios para el funcionamiento del negocio del hogar, que el patrón, el trabajador por cuenta propia o cooperativista los realizó, en el quinto mes de referencia.","N (13,2)",,
+87,gasneg6,"Total de gastos necesarios para el funcionamiento del negocio del hogar, que el patrón, el trabajador por cuenta propia o cooperativista los realizó, en el sexto mes de referencia.","N (13,2)",,
+88,ing1,Ingresos generados por el negocio en el primer mes de referencia.,"N (13,2)",,
+89,ing2,Ingresos generados por el negocio en el segundo mes de referencia.,"N (13,2)",,
+90,ing3,Ingresos generados por el negocio en el  tercer mes de referencia.,"N (13,2)",,
+91,ing4,Ingresos generados por el negocio en el cuarto mes de referencia.,"N (13,2)",,
+92,ing5,Ingresos generados por el negocio en el quinto mes de referencia.,"N (13,2)",,
+93,ing6,Ingresos generados por el negocio en el sexto mes de referencia.,"N (13,2)",,
+94,ero1,Erogaciones generadas por el negocio en el primer mes de referencia.,"N (13,2)",,
+95,ero2,Erogaciones generadas por el negocio en el segundo mes de referencia.,"N (13,2)",,
+96,ero3,Erogaciones generadas por el negocio en el tercer mes de referencia.,"N (13,2)",,
+97,ero4,Erogaciones generadas por el negocio en el cuarto mes de referencia.,"N (13,2)",,
+98,ero5,Erogaciones generadas por el negocio en el quinto mes de referencia.,"N (13,2)",,
+99,ero6,Erogaciones generadas por el negocio en el sexto mes de referencia.,"N (13,2)",,
+100,ing_tri,Ingresos trimestrales normalizados generados por el negocio.,"N (15,2)",,
+101,ero_tri,Erogaciones trimestrales normalizadas generadas por el negocio.,"N (15,2)",,
+102,ventas_tri,"Total trimestral y normalizado  de las ventas que recibieron por su negocio industrial, comercial y de servicios.","N (15,2)",,
+103,auto_tri,Autoconsumo trimestral normalizado.,"N (15,2)",,
+104,otros_tri,"Total trimestral normalizado del producto o servicios destinados a regalos, pago trabajadores, deudas del negocio, deudas del hogar o intercambios.","N (15,2)",,
+105,gasto_tri,"Total trimestral normalizado de los gastos necesarios para el funcionamiento del negocio del hogar, que el patrón, el trabajador por cuenta propia o cooperativista los realizó.","N (15,2)",,

@@ -1,0 +1,18 @@
+producto,descripcion
+Q001,"Depósitos en cuentas de ahorro, tandas, cajas de ahorro, etcétera"
+Q002,Préstamos a personas ajenas al hogar
+Q003,Pagos a tarjeta de crédito bancaria o comercial (incluye intereses)
+Q004,Pago de deudas a la empresa donde trabajan y/o a otras personas o instituciones (excluya créditos hipotecarios)
+Q005,Pago de intereses por préstamos recibidos
+Q006,"Compra de monedas nacionales o extranjeras, metales preciosos, alhajas, obras de arte, etcétera"
+Q007,Seguro de vida capitalizable
+Q008,"Herencias, dotes y legados"
+Q009,"Compra de casas, condominios, locales o terrenos que no habita el hogar"
+Q010,"Compra de terrenos, casas o condominios que habita el hogar"
+Q011,"Pago de hipotecas de bienes inmuebles: casas, locales, terrenos, edificios, etcétera"
+Q012,Otras erogaciones no consideradas en las preguntas anteriores
+Q013,"Compra de maquinaria, equipo, animales destinados a la reproducción, utilizados en negocios del hogar"
+Q014,Balance negativo en negocios del hogar agropecuarios y no agropecuarios
+Q015,"Compra de valores: cédulas, acciones y bonos"
+Q016,"Compra de marcas, patentes y derechos de autor"
+Q100,Pago de la vivienda propia y que se está pagando

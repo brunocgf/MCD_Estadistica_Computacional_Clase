@@ -1,0 +1,24 @@
+codigo,descripcion
+A001 - A074,kg
+A075 - A077,l
+"A078, A079",kg
+"A080, A081",l
+A082 - A094,kg
+"A095, A096",l
+A097 - A173,kg
+A174,l
+A175 - A192,kg
+A193,l
+A194 - A196,kg
+A197,l
+A198 - A201,kg
+A202,"De 1 a 10, se consideran kg, más de 10 se consideran piezas"
+A203 - A2010,kg
+A211,kg
+A212 - A214,kg
+A215 - A218,l
+A219,kg
+A220 - A238,l
+A239 - A241,kg
+A242,Paquete
+A243 - A247,Evento

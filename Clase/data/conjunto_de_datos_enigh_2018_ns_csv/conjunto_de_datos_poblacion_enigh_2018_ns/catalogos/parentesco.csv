@@ -1,0 +1,64 @@
+parentesco,descripcion
+101,Jefe(a)
+102,Persona sola
+201,"Esposo(a), compañero(a), cónyuge, pareja, marido, mujer, señor(a), consorte"
+202,Concubino(a)
+203,Amasio(a)
+204,"Querido(a), amante"
+205,Pareja del mismo sexo
+301,"Hijo(a), hijo(a) consanguíneo, hijo(a) reconocido"
+302,Hijo(a) adoptivo(a)
+303,"Hijastro(a), entenado(a)"
+304,Hijo(a) de crianza
+305,Hijo(a) recogido(a)
+401,Trabajador(a) doméstico(a)
+402,Recamarero(a)
+403,Cocinero(a)
+404,Lavandera(o)
+405,"Nana, niñera, nodriza"
+406,Mozo
+407,Jardinero(a)
+408,"Velador, vigilante"
+409,Portero(a)
+410,Chofer
+411,Ama de llaves
+412,Mayordomo
+413,"Dama de compañía, acompañante"
+421,Esposo(a) del(la) trabajador(a) doméstico(a)
+431,Hijo(a) del(la) trabajador(a) doméstico(a)
+441,"Madre, padre del(la) trabajador(a) doméstico(a)"
+451,Nieto(a) del(la) trabajador(a) doméstico(a)
+461,Otro pariente del(la) trabajador(a) doméstico(a)
+501,No tiene parentesco
+502,Tutor(a)
+503,"Tutelado(a), pupilo(a), alumno(a)"
+601,"Madre, padre"
+602,"Padrastro, madrastra"
+603,Hermano(a)
+604,Medio(a) hermano(a)
+605,Hermanastro(a)
+606,Abuelo(a)
+607,Bisabuelo(a)
+608,Tatarabuelo(a)
+609,Nieto(a)
+610,Bisnieto(a)
+611,Tataranieto(a)
+612,Tío(a)
+613,Sobrino(a)
+614,Primo(a)
+615,Suegro(a)
+616,Consuegro(a)
+617,"Nuera, yerno"
+618,Cuñado(a)
+619,Concuño(a)
+620,"Padrino, madrina"
+621,Ahijado(a)
+622,"Compadre, comadre"
+623,"Familiar, otro parentesco"
+701,"Huésped, abonado(a), pensionista"
+711,Esposo(a) del(la) huésped
+712,Hijo(a) del(la) huésped
+713,Madre o padre del(la) huésped
+714,Nieto(a) pariente del(la) huésped
+715,Otro(a) pariente del(la) huésped
+999,Parentesco no especificado

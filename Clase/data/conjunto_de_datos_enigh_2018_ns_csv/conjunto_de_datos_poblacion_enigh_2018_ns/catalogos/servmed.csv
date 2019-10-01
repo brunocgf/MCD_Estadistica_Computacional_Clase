@@ -1,0 +1,12 @@
+servmed,descripcion
+1,Centros de salud (secretaría de salud)
+2,Hospital o instituto (secretaría de salud)
+3,Seguro Social o IMSS
+4,IMSS-PROSPERA
+5,ISSSTE
+6,ISSSTE estatal
+7,"Otro servicio médico público (PEMEX, Defensa, Marina, DIF, INI, GDF)"
+8,Consultorios y hospitales privados
+9,Consultorio de farmacias
+10,"Curandero, hierbero, comadrona, brujo, etcétera"
+11,Otro
