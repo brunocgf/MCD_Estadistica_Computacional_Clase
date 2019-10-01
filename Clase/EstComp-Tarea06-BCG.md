@@ -187,5 +187,11 @@ ggplot(ints) +
 
 ![](EstComp-Tarea06-BCG_files/figure-gfm/intervalos_200-1.png)<!-- -->
 
-A pesar de que el intervalo normal es el de mayor rango, tambien parece
-ser el menos insesgado.
+Recordemos que el parámetro sobre el que construimos los datos es
+*lambda = 0.5*, sin embargo el estimador *plug-in* es igual a 0.55.
+Usando como base el estimador *plug-in*, el intervalo BCA parece tener
+el menor sesgo (como se espera), además de ser el intervalo con un menor
+rango. Sin embargo, partiendo del parámetro original, es el intervalo
+normal el que parece menos insesgado, aunque esto seguramente se deba a
+la generación de datos aleatorios iniciales, más que los intervalos de
+confianza.
