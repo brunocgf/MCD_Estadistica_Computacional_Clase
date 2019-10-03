@@ -2,7 +2,9 @@
 title: "ExamenParcial"
 author: "Bruno Gonzalez"
 date: "2/10/2019"
-output: html_document
+output:
+  html_document: default
+
 ---
 
 ```{r packetes, include = FALSE}
@@ -12,7 +14,7 @@ library(knitr)
 ```
 
 
-## EXAMEN PARCIAL {-}
+## EXAMEN PARCIAL
 
 
 #### 1. Tablas de conteos y bootstrap {-}
@@ -167,3 +169,17 @@ kable(select(perfiles_int, how, price, perfil, Int_inf, Int_sup), digits = 2)
 
 
 2. Modifica la última gráfica para representar los intervalos de confianza.
+
+```{r perfiles_intervalos_grafica}
+ggplot(perfiles_int) +
+  geom_segment(aes(y = price, yend = price, x = Int_inf, xend = Int_sup), size = 1) +
+  geom_point(aes(x = perfil, y = price), size = 2) +
+  facet_wrap(how~.) +
+  labs(x = element_blank(),
+       y = element_blank()) +
+  theme_light()
+```
+
+3. Comenta tus observaciones.
+
+

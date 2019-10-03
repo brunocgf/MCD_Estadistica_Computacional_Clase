@@ -20,17 +20,17 @@ tabla_perfil <- tabla %>%
 
 #Segunda forma (solo como ejercicio, no examen)
 
-tabla2 <- tea %>% 
-  count(how, price) %>% 
-  group_by(how) %>% 
-  mutate(prop_price = (100 * n / sum(n))) %>% 
-  ungroup() %>% 
-  mutate(prom_prop = mean(prop_price)) %>% 
-  mutate(perfil = (prop_price / prom_prop - 1) %>% round(2)) 
+#tabla2 <- tea %>% 
+#  count(how, price) %>% 
+#  group_by(how) %>% 
+#  mutate(prop_price = (100 * n / sum(n))) %>% 
+#  ungroup() %>% 
+#  mutate(prom_prop = mean(prop_price)) %>% 
+#  mutate(perfil = (prop_price / prom_prop - 1) %>% round(2)) 
 
-tabla_perfil2 <- tabla2 %>%   
-  select(how, price, perfil) %>% 
-  spread(how, perfil, fill = -1) 
+#tabla_perfil2 <- tabla2 %>%   
+#  select(how, price, perfil) %>% 
+#  spread(how, perfil, fill = -1) 
 
 
 # 1. Utiliza bootstrap para crear intervalos de confianza sobre los perfiles de la última tabla.
@@ -65,3 +65,11 @@ perfiles_se <- perfiles_rep %>%
 perfiles_int <- tabla %>% 
   left_join(perfiles_se) %>% 
   mutate(Int_inf = perfil+qnorm(0.025)*se, Int_sup = perfil+qnorm(0.975)*se)
+
+ggplot(perfiles_int) +
+  geom_segment(aes(y = price, yend = price, x = Int_inf, xend = Int_sup), size = 1) +
+  geom_point(aes(x = perfil, y = price), size = 2) +
+  facet_wrap(how~.) +
+  labs(x = element_blank(),
+       y = element_blank()) +
+  theme_light()
