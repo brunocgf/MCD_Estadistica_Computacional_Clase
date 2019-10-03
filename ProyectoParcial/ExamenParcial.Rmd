@@ -1,0 +1,128 @@
+---
+title: "ExamenParcial"
+author: "Bruno Gonzalez"
+date: "2/10/2019"
+output: html_document
+---
+
+```{r packetes, include = FALSE}
+library(tidyverse)
+library(FactoMineR)
+```
+
+
+## EXAMEN PARCIAL {-}
+
+
+#### 1. Tablas de conteos y bootstrap {-}
+
+En la sección de visualización vimos un ejemplo de tabla de perfiles.
+
+En este ejercicio construiremos intervalos de confianza para una tabla de perfiles usando bootstrap. Usaremos los datos de tomadores de te (del paquete @factominer):
+
+```{r data_tea}
+data(tea)
+tea <- tea %>% 
+  as_tibble %>% 
+  select(how, price, sugar)
+```
+
+Nos interesa ver qué personas compran té suelto (`unpacked`), y de qué tipo (`Tea`). Empezamos por ver las proporciones que compran té según su empaque (en bolsita o suelto):
+
+```{r tabla_tea, echo = FALSE, warning=FALSE, message=FALSE}
+formatear_tabla <- function(x_tbl, scroll = FALSE){
+    tabla <- knitr::kable(x_tbl, type = "html") %>%
+      kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                                full_width = FALSE, font_size = 15, fixed_thead = TRUE)
+    if (scroll)
+      tabla <- tabla %>% scroll_box(width = "780px") 
+    tabla 
+}
+tipo <- tea %>% 
+  count(how) %>% 
+  mutate(`%` = round(100 * n / sum(n)))
+tipo %>% formatear_tabla()
+```
+
+La tabla de arriba es poco informativa, buscamos comparar grupos, por ejemplo, queremos investigar si hay diferencias en los patrones de compra (en términos de precio o marca) dependiendo del tipo de té que consumen.
+
+```{r tabla_perfiles, echo = FALSE, warning=FALSE, message=FALSE}
+tipo <- tipo %>% select(how, prop_how = `%`)
+tabla_2 <- tea %>%
+  count(how, price) %>% 
+  group_by(how) %>% 
+  mutate(prop = round(100 * n / sum(n))) %>% 
+  select(-n) 
+tabla_2 %>% spread(how, prop, fill = 0) %>% formatear_tabla()
+```
+
+Para facilitar la comparación podemos calcular *perfiles columna*. Comparamos cada una de las columnas con la columna marginal (la tabla de tipo de estilo de té):
+
+```{r tabla_perfile2, echo=FALSE, message = FALSE, warning=FALSE}
+tabla <- tea %>% 
+  count(how, price) %>% 
+  group_by(how) %>% 
+  mutate(prop_price = (100 * n / sum(n))) %>% 
+  group_by(price) %>% 
+  mutate(prom_prop = mean(prop_price)) %>% 
+  mutate(perfil = (prop_price / prom_prop - 1) %>% round(2))  
+```
+
+```{r kable_perfiles, echo = FALSE, message = FALSE, warning=FALSE}
+precio_prom <- tabla %>% 
+  distinct(price, prom_prop) %>%
+  mutate(promedio = round(prom_prop)) %>% 
+  select(price, promedio)
+tabla_perfil <- tabla %>%   
+  select(how, price, perfil) %>% 
+  spread(how, perfil, fill = -1) 
+tabla_2 <- tabla_perfil %>% 
+  gather(how, prop_price, -price)
+if_profile <- function(x){
+  any(x < 0) & any(x > 0)
+}
+marcar_tabla_fun <- function(corte, color_1 = "darkgreen", color_2 = "red"){
+    fun_marcar <- function(x){
+        kableExtra::cell_spec(x, "html", 
+          color = ifelse(x <= -corte, color_1, 
+            ifelse(x >= corte, color_2, "lightgray")))   
+    }
+    fun_marcar
+}
+marcar <- marcar_tabla_fun(0.25, "red", "black")
+tab_out <- tabla_perfil %>% left_join(precio_prom) %>%
+    arrange(desc(`tea bag`)) %>%
+    mutate_if(if_profile, marcar) %>% 
+    knitr::kable(format = "html", escape = F, digits = 2) %>% 
+    kableExtra::kable_styling(bootstrap_options = c( "hover", "condensed"), 
+    full_width = FALSE)
+tab_out
+```
+
+Leemos esta tabla como sigue: por ejemplo, los compradores de té suelto (`unpacked`) compran té fino (`upscale`) a una tasa casi el doble (0.98) que el promedio. 
+
+También podemos graficar como:
+
+```{r perfiles_grafica, fig.width = 6, fig.height = 2, echo = FALSE, message = FALSE, warning=FALSE}
+tabla_ordenada <- tabla %>% 
+    ungroup %>% 
+    left_join(tabla %>% 
+    ungroup %>% 
+    filter(how == "tea bag") %>% 
+    select(price, perfil_tea = perfil)) %>% 
+    mutate(precio = fct_reorder(price, perfil_tea))
+g_perfil <- ggplot(tabla_ordenada,
+    aes(x = precio, xend = precio, y = perfil, yend = 0, group = how)) + 
+    geom_point() + geom_segment() + facet_wrap(~how) +
+    geom_hline(yintercept = 0 , colour = "gray") + coord_flip()
+g_perfil
+```
+
+**Observación**: hay dos maneras de construir la columna promedio: tomando los porcentajes sobre todos los datos, o promediando los porcentajes de las columnas como en este ejemplo.
+
+1. Utiliza bootstrap para crear intervalos de confianza sobre los perfiles de 
+la última tabla.
+
+2. Modifica la última gráfica para representar los intervalos de confianza.
+
+3. Comenta tus observaciones.
