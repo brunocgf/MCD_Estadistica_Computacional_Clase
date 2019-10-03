@@ -8,6 +8,7 @@ output: html_document
 ```{r packetes, include = FALSE}
 library(tidyverse)
 library(FactoMineR)
+library(knitr)
 ```
 
 
@@ -120,9 +121,49 @@ g_perfil
 
 **Observación**: hay dos maneras de construir la columna promedio: tomando los porcentajes sobre todos los datos, o promediando los porcentajes de las columnas como en este ejemplo.
 
-1. Utiliza bootstrap para crear intervalos de confianza sobre los perfiles de 
-la última tabla.
+1. Utiliza bootstrap para crear intervalos de confianza sobre los perfiles de la última tabla.
+
+Primero definimos la funcion bootstrap
+
+```{r perfiles boot}
+perfiles_boot <- function(x){
+  m <- sample_n(x, size =  300 , replace = TRUE)
+  tabla <- m %>% 
+    count(how, price) %>% 
+    group_by(how) %>% 
+    mutate(prop_price = (100 * n / sum(n))) %>% 
+    group_by(price) %>% 
+    mutate(prom_prop = mean(prop_price)) %>% 
+    mutate(perfil = (prop_price / prom_prop - 1) %>% round(2))
+  tabla
+}
+```
+
+Despues corresmos las repeticiones
+
+```{r perfiles_repeticiones}
+perfiles_rep <- rerun(1000, perfiles_boot(tea)) %>% map_dfr(~.x)
+```
+
+Posteriormente calculamos los errores estándard
+
+```{r perfiles_errores_est}
+perfiles_se <- perfiles_rep %>% 
+  group_by(how, price) %>% 
+  summarise(se = sd(perfil))
+```
+
+Por último calculamos los intervalos
+
+```{r perfiles_intervalos}
+
+perfiles_int <- tabla %>% 
+  left_join(perfiles_se) %>% 
+  mutate(Int_inf = perfil+qnorm(0.025)*se, Int_sup = perfil+qnorm(0.975)*se)
+
+kable(select(perfiles_int, how, price, perfil, Int_inf, Int_sup), digits = 2)
+
+```
+
 
 2. Modifica la última gráfica para representar los intervalos de confianza.
-
-3. Comenta tus observaciones.
