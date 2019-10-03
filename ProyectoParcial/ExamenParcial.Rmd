@@ -183,3 +183,104 @@ ggplot(perfiles_int) +
 3. Comenta tus observaciones.
 
 
+#### 2. Cuantificando el error Monte Carlo {-}
+
+Recordemos que ante la pregunta ¿cuántas muestras bootstrap se necesitan? el error que podemos disminuir al aumentar el número de replicaciones es el error de Monte Carlo, y una manera de cuantificarlo es haciendo bootstrap del bootstrap.
+
+Retomemos el ejemplo de la media de las calificaciones de ENLACE de español 3o de primaria en el estado de México. Nos interesa la media de las calificaciones y usaremos el estimador *plug-in*.
+
+```{r}
+library(estcomp)
+# universo
+enlace <- enlacep_2013 %>% 
+    janitor::clean_names() %>% 
+    mutate(id = 1:n()) %>% 
+    select(id, cve_ent, turno, tipo, esp_3 = punt_esp_3, esp_6 = punt_esp_6, 
+        n_eval_3 = alum_eval_3, n_eval_6 = alum_eval_6) %>% 
+    na.omit() %>% 
+    filter(esp_3 > 0, esp_6 > 0, n_eval_3 > 0, n_eval_6 > 0, cve_ent == "15")
+set.seed(16021)
+n <- 300
+# muestra
+enlace_muestra <- sample_n(enlace, n) %>% 
+    mutate(clase = "muestra")
+```
+
+1. Crea un intervalo del 90% para $\hat{\theta}$ usando los percentiles de la distribución bootstrap, y $B=100$ replicaciones.
+
+Primero creamos la función bootstrap
+
+```{r enlace boot}
+
+enlace_boot <- function(x,col){
+  col <- enquo(col)
+  n <- nrow(x)
+  muestra <- sample_n(x,n, replace = TRUE)
+  muestra %>% 
+    select(!!col) %>% 
+    unlist() %>% 
+    median()
+}
+```
+
+Posteriormente se hacen las $B=100$ simulaciones bootstrap.
+
+```{r enlace repeticiones}
+enlace_rep <- rerun(100, enlace_boot(enlace,esp_3))%>%
+  flatten_dbl()
+```
+
+Por último, calculamos el intervalos usando los percentiles de la distrubucion bootstrap.
+```{r enlace intervalo}
+quantile(enlace_rep, c(0.025, 0.975))
+```
+
+
+2. Podemos estimar el error estándar de Monte Carlo de los extremos de los intervalos (percentiles 0.05 y 0.95) haciendo bootstrap de la distribución bootstrap:
+  + Selecciona muestras con reemplazo de tamaño $B$ de la distribución bootstrap,
+  + Calcula los percentiles de interés (0.05 y 0.95),
+  
+Primero construimos la función bootstrap de la distribución bootstrap
+```{r enlace muestra bootstrap}
+enlace_boot_boot <- function(x){
+  n <- length(x)
+  muestra <- sample(x, size = n, replace = TRUE)
+  tibble(SE_inf = quantile(muestra, c(0.025,0.975))[1], SE_sup = quantile(muestra, c(0.025,0.975))[2])
+}
+```
+
+Con la función hacemos las repeticiones
+
+```{r enlace boot repeticiones}
+enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>% map_dfr(~.x)
+```
+
+
+  + Calcula la desviación estándar de los percentiles (una para cada extremo), esta será tu aproximación al error de Monte Carlo
+```{r enlace boot es}
+EMC100 <- map_dbl(enlace_boot_rep, sd)
+```
+
+
+
+3. ¿Cuál es el error estándar de Monte Carlo con $B = 100, 1000, 10000$ replicaciones para cada extremo del intervalo de percentiles?
+
+Para el caso de $B = 100$
+
+```{r enlace MC100}
+EMC100
+```
+
+Para el caso de $B = 1000$
+```{r enlace MC1000}
+enlace_rep <- rerun(1000, enlace_boot(enlace,esp_3))%>%flatten_dbl()
+enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>% map_dfr(~.x)
+map_dbl(enlace_boot_rep, sd)
+```
+
+Para el caso de $B = 10000$
+```{r enlace MC10000}
+enlace_rep <- rerun(10000, enlace_boot(enlace,esp_3))%>%flatten_dbl()
+enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>% map_dfr(~.x)
+map_dbl(enlace_boot_rep, sd)
+```
