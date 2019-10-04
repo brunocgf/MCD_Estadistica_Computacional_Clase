@@ -11,8 +11,8 @@ output:
 library(tidyverse)
 library(FactoMineR)
 library(knitr)
+library(boot)
 ```
-
 
 ## EXAMEN PARCIAL
 
@@ -298,37 +298,37 @@ poiss_muestra <- rpois(60,2.5)
 ```
 
 
-ii) Genera $10,000$ muestras bootstrap y calcula intervalos de confianza del 
-95\% para $\hat{\theta}$ usando 1) el método normal, 2) percentiles y 3) $BC_a$.
+ii) Genera $10,000$ muestras bootstrap y calcula intervalos de confianza del 95\% para $\hat{\theta}$ usando 1) el método normal, 2) percentiles y 3) $BC_a$.
 
-iii) Revisa si el intervalo de confianza contiene el verdadero valor del 
-parámetro ($\theta=exp(-2\cdot2.5)$), en caso de que no lo contenga registra si 
-falló por la izquierda (el límite inferior $exp(-2.5*\lambda)$) o falló por la 
-derecha (el límite superior $exp(-2.5*\lambda)$).
+
+Primero definimos la función del parámetro
+```{r poisson boot}
+poiss_boot <- function(x, ind){
+  exp(-2*mean(x[ind]))
+}
+```
+
+Posteriormente corremos las repeticiones
+
+```{r poisson repeticiones}
+poiss_rep = boot(poiss_muestra, poiss_boot,10000)
+```
+
+Finalmente, los intervalos son:
+```{r poisson intervales}
+poiss_int <- boot.ci(poiss_rep, type = c("norm", "perc", "bca"))
+kable(t(data.frame(poiss_int$normal[,2:3], poiss_int$percent[,4:5],poiss_int$bca[,4:5])), digits = 4)
+```
+
+iii) Revisa si el intervalo de confianza contiene el verdadero valor del parámetro ($\theta=exp(-2\cdot2.5)$), en caso de que no lo contenga registra si falló por la izquierda o falló por la derecha.
+
+Los tres intervalos de confianza contienen el verdadero valor del parámetro `r exp(-2*2.5)`
 
 a) Repite el proceso descrito 1000 veces y llena la siguiente tabla:
 
-<div class="mi-tabla">
-Método     | \% fallo izquierda   | \% fallo derecha  | Cobertura | Longitud promedio
------------|----------------------|-------------------|-----------|------------ 
-Normal     |                      |                   |           |
-Percentiles|                      |                   |           |
-BC_a       |                      |                   |           |
-</div>
+La columna cobertura es una estimación de la cobertura del intervalo basada en las simulaciones, para calcularla simplemente escribe el porcentaje de los intervalos que incluyeron el verdadero valor del parámetro. La longitud promedio es la longitud promedio de los intervalos de confianza bajo cada método.
 
-La columna cobertura es una estimación de la cobertura del intervalo basada en 
-las simulaciones, para calcularla simplemente escribe el porcentaje de los 
-intervalos que incluyeron el verdadero valor del parámetro. La longitud promedio
-es la longitud promedio de los intervalos de confianza bajo cada método.
-
-b) Realiza una gráfica de páneles, en cada panel mostrarás los resultados de 
-uno de los métodos (normal, percentiles y BC_a), en el vertical 
-graficarás los límites de los intervalos.
+b) Realiza una gráfica de páneles, en cada panel mostrarás los resultados de uno de los métodos (normal, percentiles y BC_a), en el vertical graficarás los límites de los intervalos.
 
 c) Repite los incisos a) y b) seleccionando muestras de tamaño $300$.
 
-Nota: Un ejemplo en donde la cantidad $P(X=0)^2 = e^{-\lambda}$ es de interés 
-es como sigue, las llamadas telefónicas a un conmutador se modelan con 
-un proceso Poisson y $\lambda$ es el número promedio de llamadas por minuto, 
-entonce $e^{- \lambda}$ es la probabilidad de que no se reciban llamadas en 
-$1$ minuto.

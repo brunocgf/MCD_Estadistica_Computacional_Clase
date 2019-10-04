@@ -1,6 +1,6 @@
 library(FactoMineR)
 library(tidyverse)
-
+library(boot)
 
 
 # Ejercicio 1 -------------------------------------------------------------
@@ -135,3 +135,85 @@ enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>% map_dfr(~.x)
 
 enlace_boot_sd <- map_dbl(enlace_boot_rep, sd)
 
+
+# Ejercicio 3 -------------------------------------------------------------
+
+   
+# i) Genera una muestra aleatoria de tamaño $n=60$ con distribución $Poisson(\lambda)$, parámetro $\lambda=2.5$
+
+poiss_muestra <- rpois(60,2.5)
+
+# ii) Genera $10,000$ muestras bootstrap y calcula intervalos de confianza del 95\% para $\hat{\theta}$ usando 
+# 1) el método normal, 2) percentiles y 3) $BC_a$.
+
+
+poiss_repn <- rerun(10000,exp(-2*mean(sample(poiss_muestra, 60, replace = TRUE)))) %>% flatten_dbl()
+exp(-2.5*mean(poiss_muestra))+sd(poiss_repn)*c(qnorm(0.025),qnorm(0.975))
+
+poiss_boot <- function(x, ind){
+  exp(-2*mean(x[ind]))
+}
+
+poiss_rep = boot(poiss_muestra, poiss_boot,10000)
+poiss_int <-boot.ci(poiss_rep, type = c("norm", "perc", "bca"))
+
+t(data.frame(poiss_int$normal[,2:3], poiss_int$percent[,4:5],poiss_int$bca[,4:5]))
+
+exp(-2*2.5)
+
+
+
+# a) Repite el proceso descrito 1000 veces y llena la siguiente tabla:
+
+poiss_rep_int <- map(1:100, ~boot(poiss_muestra, poiss_boot,10000)) %>% 
+  map(boot.ci, type = c("norm", "perc", "bca"))
+
+poiss_rep_int_norm <- map(poiss_rep_int, ~.$normal) %>%
+  flatten_dbl() %>%
+  matrix(ncol = 3, byrow = TRUE) %>% 
+  .[,2:3] %>% 
+  as.data.frame()
+
+poiss_rep_int_perc <- map(poiss_rep_int, ~.$percent) %>%
+  flatten_dbl() %>%
+  matrix(ncol = 5, byrow = TRUE) %>% 
+  .[,4:5]%>% 
+  as.data.frame()
+
+poiss_rep_int_bca <- map(poiss_rep_int, ~.$bca) %>%
+  flatten_dbl() %>%
+  matrix(ncol = 5, byrow = TRUE) %>% 
+  .[,4:5]%>% 
+  as.data.frame()
+
+poiss_rep_int_norm$tipo <- 'normal'
+poiss_rep_int_perc$tipo <- 'percentil'
+poiss_rep_int_bca$tipo <- 'bca'
+
+poiss_rep_int_norm$id <- 1:100
+poiss_rep_int_perc$id <- 1:100
+poiss_rep_int_bca$id <- 1:100
+
+poiss_rep_int <- rbind(poiss_rep_int_norm,poiss_rep_int_perc,poiss_rep_int_bca)
+names(poiss_rep_int) <- c('Infe','Sup','Tipo','id')
+
+poiss_rep_int <- poiss_rep_int %>% 
+  mutate(fallo_izquierda = exp(-2*2.5)<Infe, fallo_derecha = exp(-2*2.5)>Sup, Longitud = Sup-Infe)
+
+poiss_rep_int_res <- poiss_rep_int %>% 
+  group_by(Tipo) %>% 
+  summarise(P_fallo_izquierda = sum(fallo_izquierda)/n(),
+            P_fallo_derecha = sum(fallo_derecha)/n(),
+            Cobertura = 1 - P_fallo_izquierda - P_fallo_derecha,
+            Longitud_promedio = mean(Longitud))
+
+
+# b) Realiza una gráfica de páneles, en cada panel mostrarás los resultados de uno de los métodos (normal, percentiles y BC_a),
+# en el vertical graficarás los límites de los intervalos.
+
+ggplot(poiss_rep_int) +
+  geom_segment(aes(x = id, xend = id, y = Infe, yend = Sup)) +
+  geom_hline(yintercept = exp(-2.5*2)) +
+  facet_grid(Tipo~.)
+# 
+# c) Repite los incisos a) y b) seleccionando muestras de tamaño $300$.
