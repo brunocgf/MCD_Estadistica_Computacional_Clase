@@ -41,7 +41,8 @@ tabla_perfil <- tabla %>%
 
 # función bootstrap
 perfiles_boot <- function(x){
-  m <- sample_n(x, size =  300 , replace = TRUE)
+  n <- nrow(x)
+  m <- sample_n(x, size =  n , replace = TRUE)
   tabla <- m %>% 
     count(how, price) %>% 
     group_by(how) %>% 
@@ -52,9 +53,17 @@ perfiles_boot <- function(x){
   tabla
 }
 
+
+tabla <- tea %>% 
+  count(how, price) %>% 
+  group_by(how) %>% 
+  mutate(prop_price = (100 * n / sum(n))) %>% 
+  group_by(price) %>% 
+  mutate(prom_prop = mean(prop_price)) %>% 
+  mutate(perfil = (prop_price / prom_prop - 1) %>% round(2))
 # Repeticiones
 
-perfiles_rep <- rerun(1000, perfiles_boot(tea)) %>% map_dfr(~.x)
+perfiles_rep <- rerun(1000, perfiles_boot(tea)) %>% bind_rows(.id = 'muestra')## %>% map_dfr(~.x)
 
 
 # Error estandard
@@ -113,7 +122,7 @@ enlace_boot <- function(x,col){
 
 enlace_rep <- rerun(100, enlace_boot(enlace,esp_3)) %>% flatten_dbl()
 
-quantile(enlace_rep, c(0.025, 0.975))
+quantile(enlace_rep, c(0.05, 0.95))
 
 
 # 2. Podemos estimar el error estándar de Monte Carlo de los extremos de los intervalos (percentiles 0.05 y 0.95) haciendo bootstrap de la distribución bootstrap:
@@ -141,67 +150,40 @@ enlace_boot_sd <- map_dbl(enlace_boot_rep, sd)
    
 # i) Genera una muestra aleatoria de tamaño $n=60$ con distribución $Poisson(\lambda)$, parámetro $\lambda=2.5$
 
-poiss_muestra <- rpois(60,2.5)
-
 # ii) Genera $10,000$ muestras bootstrap y calcula intervalos de confianza del 95\% para $\hat{\theta}$ usando 
 # 1) el método normal, 2) percentiles y 3) $BC_a$.
-
-
-poiss_repn <- rerun(10000,exp(-2*mean(sample(poiss_muestra, 60, replace = TRUE)))) %>% flatten_dbl()
-exp(-2.5*mean(poiss_muestra))+sd(poiss_repn)*c(qnorm(0.025),qnorm(0.975))
 
 poiss_boot <- function(x, ind){
   exp(-2*mean(x[ind]))
 }
 
-poiss_rep = boot(poiss_muestra, poiss_boot,10000)
-poiss_int <-boot.ci(poiss_rep, type = c("norm", "perc", "bca"))
 
-t(data.frame(poiss_int$normal[,2:3], poiss_int$percent[,4:5],poiss_int$bca[,4:5]))
-
-exp(-2*2.5)
+poiss_intervalos <- function(n=60) {
+  poiss_muestra <- rpois(n,2.5)
+  
+  poiss_rep <-  boot(poiss_muestra, poiss_boot,10000)
+  poiss_int <-boot.ci(poiss_rep, type = c("norm", "perc", "bca"))
+  
+  data.frame(metodo = c('normal','percentil','BCa'),
+             theta = poiss_int$t0,
+             inferior = c(poiss_int$normal[2],poiss_int$percent[4],poiss_int$bca[4]),
+             superior = c(poiss_int$normal[3],poiss_int$percent[5],poiss_int$bca[5]))
+}
 
 
 
 # a) Repite el proceso descrito 1000 veces y llena la siguiente tabla:
 
-poiss_rep_int <- map(1:100, ~boot(poiss_muestra, poiss_boot,10000)) %>% 
-  map(boot.ci, type = c("norm", "perc", "bca"))
+poiss_rep_int <- rerun(1000, poiss_intervalos()) %>% bind_rows(.id = 'muestra')
 
-poiss_rep_int_norm <- map(poiss_rep_int, ~.$normal) %>%
-  flatten_dbl() %>%
-  matrix(ncol = 3, byrow = TRUE) %>% 
-  .[,2:3] %>% 
-  as.data.frame()
-
-poiss_rep_int_perc <- map(poiss_rep_int, ~.$percent) %>%
-  flatten_dbl() %>%
-  matrix(ncol = 5, byrow = TRUE) %>% 
-  .[,4:5]%>% 
-  as.data.frame()
-
-poiss_rep_int_bca <- map(poiss_rep_int, ~.$bca) %>%
-  flatten_dbl() %>%
-  matrix(ncol = 5, byrow = TRUE) %>% 
-  .[,4:5]%>% 
-  as.data.frame()
-
-poiss_rep_int_norm$tipo <- 'normal'
-poiss_rep_int_perc$tipo <- 'percentil'
-poiss_rep_int_bca$tipo <- 'bca'
-
-poiss_rep_int_norm$id <- 1:100
-poiss_rep_int_perc$id <- 1:100
-poiss_rep_int_bca$id <- 1:100
-
-poiss_rep_int <- rbind(poiss_rep_int_norm,poiss_rep_int_perc,poiss_rep_int_bca)
-names(poiss_rep_int) <- c('Infe','Sup','Tipo','id')
 
 poiss_rep_int <- poiss_rep_int %>% 
-  mutate(fallo_izquierda = exp(-2*2.5)<Infe, fallo_derecha = exp(-2*2.5)>Sup, Longitud = Sup-Infe)
+  mutate(fallo_izquierda = exp(-2*2.5)<inferior,
+         fallo_derecha = exp(-2*2.5)>superior,
+         Longitud = superior-inferior)
 
 poiss_rep_int_res <- poiss_rep_int %>% 
-  group_by(Tipo) %>% 
+  group_by(metodo) %>% 
   summarise(P_fallo_izquierda = sum(fallo_izquierda)/n(),
             P_fallo_derecha = sum(fallo_derecha)/n(),
             Cobertura = 1 - P_fallo_izquierda - P_fallo_derecha,
@@ -210,10 +192,13 @@ poiss_rep_int_res <- poiss_rep_int %>%
 
 # b) Realiza una gráfica de páneles, en cada panel mostrarás los resultados de uno de los métodos (normal, percentiles y BC_a),
 # en el vertical graficarás los límites de los intervalos.
-
-ggplot(poiss_rep_int) +
-  geom_segment(aes(x = id, xend = id, y = Infe, yend = Sup)) +
-  geom_hline(yintercept = exp(-2.5*2)) +
-  facet_grid(Tipo~.)
+  ggplot(poiss_rep_int) +
+    geom_pointrange(aes(x = reorder(muestra,theta),
+                        ymin = inferior,
+                        y=theta,
+                        ymax = superior),
+                    size=0.2) +
+    geom_hline(yintercept = exp(-2.5*2)) +
+    facet_grid(metodo~.)
 # 
 # c) Repite los incisos a) y b) seleccionando muestras de tamaño $300$.

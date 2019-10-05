@@ -33,18 +33,10 @@ tea <- tea %>%
 Nos interesa ver qué personas compran té suelto (`unpacked`), y de qué tipo (`Tea`). Empezamos por ver las proporciones que compran té según su empaque (en bolsita o suelto):
 
 ```{r tabla_tea, echo = FALSE, warning=FALSE, message=FALSE}
-formatear_tabla <- function(x_tbl, scroll = FALSE){
-    tabla <- knitr::kable(x_tbl, type = "html") %>%
-      kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-                                full_width = FALSE, font_size = 15, fixed_thead = TRUE)
-    if (scroll)
-      tabla <- tabla %>% scroll_box(width = "780px") 
-    tabla 
-}
 tipo <- tea %>% 
   count(how) %>% 
   mutate(`%` = round(100 * n / sum(n)))
-tipo %>% formatear_tabla()
+tipo %>% kable()
 ```
 
 La tabla de arriba es poco informativa, buscamos comparar grupos, por ejemplo, queremos investigar si hay diferencias en los patrones de compra (en términos de precio o marca) dependiendo del tipo de té que consumen.
@@ -56,7 +48,7 @@ tabla_2 <- tea %>%
   group_by(how) %>% 
   mutate(prop = round(100 * n / sum(n))) %>% 
   select(-n) 
-tabla_2 %>% spread(how, prop, fill = 0) %>% formatear_tabla()
+tabla_2 %>% spread(how, prop, fill = 0)
 ```
 
 Para facilitar la comparación podemos calcular *perfiles columna*. Comparamos cada una de las columnas con la columna marginal (la tabla de tipo de estilo de té):
@@ -81,24 +73,10 @@ tabla_perfil <- tabla %>%
   spread(how, perfil, fill = -1) 
 tabla_2 <- tabla_perfil %>% 
   gather(how, prop_price, -price)
-if_profile <- function(x){
-  any(x < 0) & any(x > 0)
-}
-marcar_tabla_fun <- function(corte, color_1 = "darkgreen", color_2 = "red"){
-    fun_marcar <- function(x){
-        kableExtra::cell_spec(x, "html", 
-          color = ifelse(x <= -corte, color_1, 
-            ifelse(x >= corte, color_2, "lightgray")))   
-    }
-    fun_marcar
-}
-marcar <- marcar_tabla_fun(0.25, "red", "black")
+
 tab_out <- tabla_perfil %>% left_join(precio_prom) %>%
     arrange(desc(`tea bag`)) %>%
-    mutate_if(if_profile, marcar) %>% 
-    knitr::kable(format = "html", escape = F, digits = 2) %>% 
-    kableExtra::kable_styling(bootstrap_options = c( "hover", "condensed"), 
-    full_width = FALSE)
+    knitr::kable(format = "html", escape = F, digits = 2)
 tab_out
 ```
 
@@ -143,8 +121,8 @@ perfiles_boot <- function(x){
 
 Despues corresmos las repeticiones
 
-```{r perfiles_repeticiones}
-perfiles_rep <- rerun(1000, perfiles_boot(tea)) %>% map_dfr(~.x)
+```{r perfiles_repeticiones, cache=TRUE}
+perfiles_rep <- rerun(10000, perfiles_boot(tea)) %>% bind_rows(.id = 'muestra')
 ```
 
 Posteriormente calculamos los errores estándard
@@ -170,7 +148,7 @@ kable(select(perfiles_int, how, price, perfil, Int_inf, Int_sup), digits = 2)
 
 2. Modifica la última gráfica para representar los intervalos de confianza.
 
-```{r perfiles_intervalos_grafica}
+```{r perfiles_intervalos_grafica, , fig.width = 6, fig.height = 2, echo = FALSE, message = FALSE, warning=FALSE}
 ggplot(perfiles_int) +
   geom_segment(aes(y = price, yend = price, x = Int_inf, xend = Int_sup), size = 1) +
   geom_point(aes(x = perfil, y = price), size = 2) +
@@ -181,6 +159,7 @@ ggplot(perfiles_int) +
 ```
 
 3. Comenta tus observaciones.
+En la categoria de teabag la mayor tasa de compra son los precios "private label y unknown" que son .72 con un intervalo de confianza entre .10 y 1.34. Lo cual nos indica que este patron de comportamiento es alto en esa categoria porque los usuarios de tea compran mas a estos precios y por otro lado compran a una tasa negativa a precio upscale.
 
 
 #### 2. Cuantificando el error Monte Carlo {-}
@@ -232,7 +211,7 @@ enlace_rep <- rerun(100, enlace_boot(enlace,esp_3))%>%
 
 Por último, calculamos el intervalos usando los percentiles de la distrubucion bootstrap.
 ```{r enlace intervalo}
-quantile(enlace_rep, c(0.025, 0.975))
+quantile(enlace_rep, c(0.05, 0.95))
 ```
 
 
@@ -251,8 +230,9 @@ enlace_boot_boot <- function(x){
 
 Con la función hacemos las repeticiones
 
-```{r enlace boot repeticiones}
-enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>% map_dfr(~.x)
+```{r enlace boot repeticiones, cache=TRUE}
+enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>%
+  bind_rows(.id = 'muestra')
 ```
 
 
@@ -268,22 +248,26 @@ EMC100 <- map_dbl(enlace_boot_rep, sd)
 Para el caso de $B = 100$
 
 ```{r enlace MC100}
-EMC100
+EMC100[2:3]
 ```
 
 Para el caso de $B = 1000$
-```{r enlace MC1000}
+```{r enlace MC1000, cache=TRUE}
 enlace_rep <- rerun(1000, enlace_boot(enlace,esp_3))%>%flatten_dbl()
-enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>% map_dfr(~.x)
-map_dbl(enlace_boot_rep, sd)
+enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>%
+  bind_rows(.id = 'muestra')
+map_dbl(enlace_boot_rep, sd)[2:3]
 ```
 
 Para el caso de $B = 10000$
-```{r enlace MC10000}
+```{r enlace MC10000, cache=TRUE}
 enlace_rep <- rerun(10000, enlace_boot(enlace,esp_3))%>%flatten_dbl()
-enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>% map_dfr(~.x)
-map_dbl(enlace_boot_rep, sd)
+enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>%
+  bind_rows(.id = 'muestra')
+map_dbl(enlace_boot_rep, sd)[2:3]
 ```
+
+Las corridas muestran la que el error Monte Carlo va disminuyendo conforme se aumentan el número de replicaciones.
 
 #### 3. Cobertura de intervalos de confianza {-}
 
@@ -292,11 +276,6 @@ En este problema realizarás un ejercicio de simulación para comparar la exacti
 Sigue el siguiente proceso:
 
 i) Genera una muestra aleatoria de tamaño $n=60$ con distribución $Poisson(\lambda)$, parámetro $\lambda=2.5$ (en R usa la función `rpois()`).
-
-```{r poisson muestra}
-poiss_muestra <- rpois(60,2.5)
-```
-
 
 ii) Genera $10,000$ muestras bootstrap y calcula intervalos de confianza del 95\% para $\hat{\theta}$ usando 1) el método normal, 2) percentiles y 3) $BC_a$.
 
@@ -308,16 +287,26 @@ poiss_boot <- function(x, ind){
 }
 ```
 
-Posteriormente corremos las repeticiones
+Posteriormente definimos la funcion que genera los intervalos de confianza
 
-```{r poisson repeticiones}
-poiss_rep = boot(poiss_muestra, poiss_boot,10000)
+```{r poisson intervalos}
+poiss_intervalos <- function(n=60) {
+  poiss_muestra <- rpois(n,2.5)
+  
+  poiss_rep <-  boot(poiss_muestra, poiss_boot,10000)
+  poiss_int <-boot.ci(poiss_rep, type = c("norm", "perc", "bca"))
+  
+  data.frame(metodo = c('normal','percentil','BCa'),
+             theta = poiss_int$t0,
+             inferior = c(poiss_int$normal[2],poiss_int$percent[4],poiss_int$bca[4]),
+             superior = c(poiss_int$normal[3],poiss_int$percent[5],poiss_int$bca[5]))
+}
 ```
 
 Finalmente, los intervalos son:
 ```{r poisson intervales}
-poiss_int <- boot.ci(poiss_rep, type = c("norm", "perc", "bca"))
-kable(t(data.frame(poiss_int$normal[,2:3], poiss_int$percent[,4:5],poiss_int$bca[,4:5])), digits = 4)
+poiss_intervalos() %>% 
+  kable(digits = 4)
 ```
 
 iii) Revisa si el intervalo de confianza contiene el verdadero valor del parámetro ($\theta=exp(-2\cdot2.5)$), en caso de que no lo contenga registra si falló por la izquierda o falló por la derecha.
@@ -326,9 +315,85 @@ Los tres intervalos de confianza contienen el verdadero valor del parámetro `r 
 
 a) Repite el proceso descrito 1000 veces y llena la siguiente tabla:
 
+Primero corremos las 100 repeticiones
+
+```{r poisson repeticiones, cache=TRUE}
+poiss_rep_int <- rerun(1000, poiss_intervalos()) %>% bind_rows(.id = 'muestra')
+```
+
+Posteriormente calculamos los fallos y combertura
+
+```{r poisson fallos}
+poiss_rep_int <- poiss_rep_int %>% 
+  mutate(fallo_izquierda = exp(-2*2.5)<inferior,
+         fallo_derecha = exp(-2*2.5)>superior,
+         Longitud = superior-inferior)
+```
+
+Así tenemos la siguiente tabla:
+
+```{r poisson tabla}
+poiss_rep_int %>% 
+  group_by(metodo) %>% 
+  summarise(P_fallo_izquierda = sum(fallo_izquierda)/n(),
+            P_fallo_derecha = sum(fallo_derecha)/n(),
+            Cobertura = 1 - P_fallo_izquierda - P_fallo_derecha,
+            Longitud_promedio = mean(Longitud)) %>% 
+  kable()
+```
+
+
 La columna cobertura es una estimación de la cobertura del intervalo basada en las simulaciones, para calcularla simplemente escribe el porcentaje de los intervalos que incluyeron el verdadero valor del parámetro. La longitud promedio es la longitud promedio de los intervalos de confianza bajo cada método.
 
 b) Realiza una gráfica de páneles, en cada panel mostrarás los resultados de uno de los métodos (normal, percentiles y BC_a), en el vertical graficarás los límites de los intervalos.
 
+```{r poisson grafica}
+  ggplot(poiss_rep_int) +
+    geom_pointrange(aes(x = reorder(muestra,theta),
+                        ymin = inferior,
+                        y=theta,
+                        ymax = superior),
+                    size=0.2) +
+    geom_hline(yintercept = exp(-2.5*2)) +
+    facet_grid(metodo~.)
+```
+
+
 c) Repite los incisos a) y b) seleccionando muestras de tamaño $300$.
 
+
+Primero hacemos las repeticiones con el tamano de muestra 300.
+
+```{r poisson 300, cache=TRUE}
+poiss_rep_int_300 <- rerun(1000, poiss_intervalos(300))%>%
+  bind_rows(.id = 'muestra') %>% 
+  mutate(fallo_izquierda = exp(-2*2.5)<inferior,
+         fallo_derecha = exp(-2*2.5)>superior,
+         Longitud = superior-inferior)
+```
+
+Así obtenemos la siguiente tabla:
+
+
+```{r poisson tabla 300}
+poiss_rep_int_300 %>% 
+  group_by(metodo) %>% 
+  summarise(P_fallo_izquierda = sum(fallo_izquierda)/n(),
+            P_fallo_derecha = sum(fallo_derecha)/n(),
+            Cobertura = 1 - P_fallo_izquierda - P_fallo_derecha,
+            Longitud_promedio = mean(Longitud))%>% 
+  kable()
+```
+
+Y la siguiente gráfica:
+
+```{r poisson grafica 300}
+  ggplot(poiss_rep_int_300) +
+    geom_pointrange(aes(x = reorder(muestra,theta),
+                        ymin = inferior,
+                        y=theta,
+                        ymax = superior),
+                    size=0.2) +
+    geom_hline(yintercept = exp(-2.5*2)) +
+    facet_grid(metodo~.)
+```

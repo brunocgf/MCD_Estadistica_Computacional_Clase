@@ -1,0 +1,50 @@
+---
+title: "temp"
+author: "Bruno C. Gonzalez"
+date: "4/10/2019"
+output: html_document
+---
+2. Intervalos de confianza. En este ejercicio compararemos distintos intervalos
+de confianza para las medias de una exponencial
+  + Simula una muestra de tamaño 40 de una distribución exponencial(1/2).
+  
+  + Calcula el estimador *plug-in*.
+  
+  + Calcula intervalos: normal, de percentiles y $BC_a$, presentalos en una
+  tabla (para los $BC_a$ usa la función `boot.ci()` del paquete `boot`.
+  
+  + Repite los pasos anteriores 200 veces y grafica los intervalos, ¿cómo se 
+  comparan?
+
+```{r}
+library(boot)
+library(tidyverse)
+sim_exp <- rexp(40, 1/2)
+my_mean <- function(x, ind) mean(x[ind])
+boot_sim_exp <- boot(sim_exp, my_mean, R = 10000)
+ints <- boot.ci(boot_sim_exp, type = c("norm", "perc", "bca"))
+```
+
+```{r}
+set.seed(142982)
+prob5 <- function(){
+    sim_exp <- rexp(80, 1/2)
+    boot_sim_exp <- boot(sim_exp, my_mean, R = 10000)
+    ints <- boot.ci(boot_sim_exp, type = c("norm", "perc", "bca"))
+    intervalos <- data.frame(
+        metodo = c("normal", "percent", "BC_a"), 
+        theta = boot_sim_exp$t0,
+        izq = c(ints$normal[2], ints$percent[4], ints$bca[4]),
+        der = c(ints$normal[3], ints$percent[5], ints$bca[5])
+    )
+}
+a <- rerun(200, prob5()) %>% bind_rows(.id = "sample")
+a %>% 
+    mutate(cubre = izq < 2 & der > 2) %>% 
+    group_by(metodo) %>% 
+    summarise(mean(cubre))
+ggplot(a, aes(x = reorder(sample, theta), ymin = izq, y = theta, ymax = der)) +
+    geom_pointrange(fatten = 0.8, alpha = 0.5) +
+    facet_wrap(~ metodo, ncol = 1) +
+    geom_hline(yintercept = 2)
+```
