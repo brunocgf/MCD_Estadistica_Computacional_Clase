@@ -696,3 +696,124 @@ Y la siguiente gráfica:
 ```
 
 ![](ExamenParcial_files/figure-gfm/poisson%20grafica%20300-1.png)<!-- -->
+
+#### 5\. Simulación de variables aleatorias
+
+Recuerda que una variable aleatoria \(X\) tiene una distribución
+geométrica con parámetro \(p\) si \[p_X(i) = P(X=i)=pq^{i-1}\] para
+\(i=1,2,...\) y donde \(q=1-p\).
+
+Notemos que \[\sum_{i=1}^{j-1}P(X=i)=1-P(X\geq j-1)\] \[=1 - q^{j-1}\]
+para \(j\geq 1\). por lo que podemos generar un valor de \(X\) generando
+un número aleatorio \(U\) y seleccionando \(j\) tal que
+\[1-q^{j-1} \leq U \leq 1-q^j\]
+
+Esto es, podemos definir \(X\) como: \[X=min\{j : (1-p)^j < 1-U\}\]
+usando que el logaritmo es una función monótona (i.e. \(a<b\) implica
+\(log(a)<log(b)\)) obtenemos que podemos expresar \(X\) como
+\[X=min\big\{j : j \cdot log(q) < log(1-U)\big\}\]
+\[=min\big\{j : j > log(U)/log(q)\big\}\] entonces
+\[X= int\bigg(\frac{log(U)}{log(q)}\bigg)+1\]
+
+es geométrica con parámetro \(p\).
+
+Ahora, sea \(X\) el número de lanzamientos de una moneda que se
+requieren para alcanzar \(r\) éxitos (soles) cuando cada lanzamiento es
+independiente, \(X\) tiene una distribución binomial negativa.
+
+Una variable aleatoria \(X\) tiene distribución binomial negativa con
+parámetros \((r,p)\) donde \(r\) es un entero positivo y \(0<p<r\) si
+\[P(X=j)=\frac{(j-1)!}{(j-r)!(r-1)!}p^r(1-p)^{j-r}.\]
+
+1)  Recuerda la distribución geométrica ¿cuál es a relación entre la
+    variable aleatoria binomial negativa y la geométrica?
+
+La distribución geometrica es un caso particular de la binomian negativa
+cuando \(r=1\), es decir, cuando solo se quiere obtener el número de
+lanzamientos antes del primer exito.
+
+2)  Utiliza el procedimiento descrito para generar observaciones de una
+    variable aleatoria con distribución geométrica y la relación entre
+    la geométrica y la binomial negativa para generar simulaciones de
+    una variable aleatoria con distribución binomial negativa (parámetro
+    p = 0.7, r = 20). Utiliza la semilla 341285 y reporta las primeras
+    10 simulaciones obtenidas.
+
+Para el caso de la geometrica tenemos:
+
+``` r
+set.seed(341285)
+sim_geometrica <- function(p, n=1){
+  U <- runif(n)
+  q <- (1-p)
+  as.integer(log(U)/log(q))+1
+}
+
+sim_geometrica(0.7,10)  
+```
+
+    ##  [1] 1 1 1 1 2 2 1 1 2 1
+
+Para el caso de la binomial negativa tenemos:
+
+``` r
+sim_binn <- function(p,r){
+  sum(sim_geometrica(p,n=r))
+}
+
+rerun(10,sim_binn(0.7,20)) %>% flatten_dbl()
+```
+
+    ##  [1] 25 28 28 31 29 35 34 30 29 30
+
+3)  Verifica la relación \[p_{j+1}=\frac{j(1-p)}{j+1-r}p_j\]
+
+y úsala para generar un nuevo algoritmo de simulación, vuelve a definir
+la semilla y reporta las primeras 10
+simulaciones.
+
+\[ \frac{p_{j +1}}{p_j} = \frac{\frac{j!}{(j+1-r)!(r-1)!}p^r(1-p)^{j+1-r}}{\frac{(j-1)!}{(j-r)!(r-1)!}p^r(1-p)^{j-r}}= \frac{j(1 - p) }{j + 1 - r}.\]
+
+``` r
+set.seed(341285)
+sim_binn_rec <- function(p,r){
+  U <- runif(1)
+  i <- r
+  f <- p^r
+  P <- f
+  while(U>=P){
+    f <- i*(1-p)*f/(i+1-r)
+    P <- P+f
+    i <- i+1
+  }
+  i
+}
+
+rerun(10, sim_binn_rec(0.7,20)) %>% flatten_dbl()
+```
+
+    ##  [1] 30 29 31 30 26 25 33 27 25 40
+
+4)  Realiza 10,000 simulaciones usando cada uno de los algoritmos y
+    compara el tiempo de ejecución (puedes usar la función
+    `system.time()`.
+
+<!-- end list -->
+
+``` r
+system.time(rerun(10000, sim_binn(0.7,20)))
+```
+
+    ##    user  system elapsed 
+    ##    0.09    0.00    0.09
+
+``` r
+system.time(rerun(10000, sim_binn_rec(0.7,20)))
+```
+
+    ##    user  system elapsed 
+    ##    0.06    0.00    0.06
+
+5)  Genera un histogrma para cada algoritmo (usa 1000 simulaciones) y
+    comparalo con la distribución construida usando la función de R
+    *dnbinom*.

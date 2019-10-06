@@ -202,3 +202,62 @@ poiss_rep_int_res <- poiss_rep_int %>%
     facet_grid(metodo~.)
 # 
 # c) Repite los incisos a) y b) seleccionando muestras de tamaño $300$.
+  
+
+# Ejercicio 5 --------------------------------------------------------------
+
+
+  
+# b) Utiliza el procedimiento descrito para generar observaciones de una variable aleatoria
+#  con distribución geométrica y la relación entre la geométrica y la binomial negativa
+#  para generar simulaciones de una variable aleatoria con distribución binomial negativa
+# (parámetro p = 0.7, r = 20). Utiliza la semilla 341285 y reporta las primeras 10 simulaciones obtenidas.
+
+  
+#Para el caso de la geometrica tenemos:
+    
+set.seed(341285)
+sim_geometrica <- function(p, n=1){
+  U <- runif(n)
+  q <- (1-p)
+  as.integer(log(U)/log(q))+1
+}
+  
+sim_geometrica(0.7,10)  
+    
+# Para el caso de la binomial negativa tenemos:
+
+sim_binn <- function(p,r){
+  sum(sim_geometrica(p,n=r))
+}
+ 
+rerun(10,sim_bin_negativa(0.7,20)) %>% flatten_dbl()
+ 
+# c) Verifica la relación $$p_{j+1}=\frac{j(1-p)}{j+1-r}p_j$$ y úsala para generar
+# un nuevo algoritmo de simulación, vuelve a definir la
+# semilla y reporta las primeras 10 simulaciones.
+set.seed(341285)
+sim_binn_rec <- function(p,r){
+  U <- runif(1)
+  i <- r
+  f <- p^r
+  P <- f
+  while(U>=P){
+    f <- i*(1-p)*f/(i+1-r)
+    P <- P+f
+    i <- i+1
+  }
+  i
+}
+
+rerun(10, sim_binn_rec(0.7,20)) %>% flatten_dbl()
+
+# d) Realiza 10,000 simulaciones usando cada uno de los algoritmos y compara el 
+# tiempo de ejecución (puedes usar la función `system.time()`, explicada en 
+# la sección de [rendimiento en R](https://tereom.github.io/est-computacional-2019/rendimiento-en-r.html)).
+
+system.time(rerun(10000, sim_binn(0.7,20)))
+system.time(rerun(10000, sim_binn_rec(0.7,20)))
+
+# e) Genera un histogrma para cada algoritmo (usa 1000 simulaciones) y comparalo 
+# con la distribución construida usando la función de R _dnbinom_.
