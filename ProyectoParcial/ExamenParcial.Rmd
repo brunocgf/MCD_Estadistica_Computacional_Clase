@@ -2,8 +2,7 @@
 title: "ExamenParcial"
 author: "Bruno Gonzalez"
 date: "2/10/2019"
-output:
-  html_document: default
+output: github_document
 
 ---
 
