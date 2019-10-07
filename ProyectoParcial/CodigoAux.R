@@ -60,10 +60,11 @@ tabla <- tea %>%
   mutate(prop_price = (100 * n / sum(n))) %>% 
   group_by(price) %>% 
   mutate(prom_prop = mean(prop_price)) %>% 
-  mutate(perfil = (prop_price / prom_prop - 1) %>% round(2))
+  mutate(perfil = (prop_price / prom_prop - 1) %>% round(2)) %>% 
+  ungroup()
 # Repeticiones
 
-perfiles_rep <- rerun(1000, perfiles_boot(tea)) %>% bind_rows(.id = 'muestra')## %>% map_dfr(~.x)
+perfiles_rep <- rerun(100, perfiles_boot(tea)) %>% bind_rows(.id = 'muestra')## %>% map_dfr(~.x)
 
 
 # Error estandard
@@ -73,18 +74,21 @@ perfiles_se <- perfiles_rep %>%
   summarise(se = sd(perfil))
 
 
+
 # Intervalos
 
 perfiles_int <- tabla %>% 
   left_join(perfiles_se) %>% 
   mutate(Int_inf = perfil+qnorm(0.025)*se, Int_sup = perfil+qnorm(0.975)*se)
+  
 
-ggplot(perfiles_int) +
+perfiles_int %>% 
+ggplot() +
   geom_segment(aes(y = price, yend = price, x = Int_inf, xend = Int_sup), size = 1) +
   geom_point(aes(x = perfil, y = price), size = 2) +
   facet_wrap(how~.) +
-  labs(x = element_blank(),
-       y = element_blank()) +
+  labs(x = 'perfil',
+       y = 'precio') +
   theme_light()
 
 
@@ -231,7 +235,7 @@ sim_binn <- function(p,r){
   sum(sim_geometrica(p,n=r))
 }
  
-rerun(10,sim_bin_negativa(0.7,20)) %>% flatten_dbl()
+rerun(10,sim_binn(0.7,20)) %>% flatten_dbl()
  
 # c) Verifica la relación $$p_{j+1}=\frac{j(1-p)}{j+1-r}p_j$$ y úsala para generar
 # un nuevo algoritmo de simulación, vuelve a definir la
@@ -262,7 +266,20 @@ system.time(rerun(10000, sim_binn_rec(0.7,20)))
 # e) Genera un histogrma para cada algoritmo (usa 1000 simulaciones) y comparalo 
 # con la distribución construida usando la función de R _dnbinom_.
 
+binn_alg1 <- rerun(10000, sim_binn(0.7,20)) %>% flatten_dbl()
+binn_alg2 <- rerun(10000, sim_binn_rec(0.7,20))%>% flatten_dbl()
+binn_R <- (rnbinom(10000, size = 20, p = 0.7)+20) %>% flatten_dbl()
 
+binn_hist <- tibble(Alg1 = binn_alg1,
+                        Alg2 = binn_alg2,
+                        R = binn_R) %>% 
+  pivot_longer(Alg1:R,names_to = 'modelo', values_to = 'valor')
+
+ggplot(binn_hist) + 
+  geom_histogram(aes(valor), breaks = 20:45) +
+  facet_grid(modelo~.) +
+  theme_light()
+  
 
 # Ejercicio 4 -------------------------------------------------------------
 # 4. Cobertura en la práctica

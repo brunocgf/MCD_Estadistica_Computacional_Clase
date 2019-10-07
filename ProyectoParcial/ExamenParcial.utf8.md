@@ -4,19 +4,11 @@ author:
 - "Yalidt Diaz - 141394"
 - "Bruno Gonzalez - 150370"
 date: "7/10/2019"
-output: 
-  pdf_document: default
-  github_document: default
+output: github_document
 
 ---
 
-```{r packetes, include = FALSE}
-library(tidyverse)
-library(FactoMineR)
-library(knitr)
-library(boot)
-library(estcomp)
-```
+
 
 ## EXAMEN PARCIAL
 
@@ -27,83 +19,48 @@ En la sección de visualización vimos un ejemplo de tabla de perfiles.
 
 En este ejercicio construiremos intervalos de confianza para una tabla de perfiles usando bootstrap. Usaremos los datos de tomadores de te (del paquete @factominer):
 
-```{r data_tea, echo = FALSE, warning=FALSE, message=FALSE}
-data(tea)
-tea <- tea %>% 
-  as_tibble %>% 
-  select(how, price, sugar)
-```
+
 
 Nos interesa ver qué personas compran té suelto (`unpacked`), y de qué tipo (`Tea`). Empezamos por ver las proporciones que compran té según su empaque (en bolsita o suelto):
 
-```{r tabla_tea, echo = FALSE, warning=FALSE, message=FALSE}
-tipo <- tea %>% 
-  count(how) %>% 
-  mutate(`%` = round(100 * n / sum(n)))
-tipo %>% kable()
-```
+
+how                     n    %
+-------------------  ----  ---
+tea bag               170   57
+tea bag+unpackaged     94   31
+unpackaged             36   12
 
 La tabla de arriba es poco informativa, buscamos comparar grupos, por ejemplo, queremos investigar si hay diferencias en los patrones de compra (en términos de precio o marca) dependiendo del tipo de té que consumen.
 
-```{r tabla_perfiles, echo = FALSE, warning=FALSE, message=FALSE}
-tipo <- tipo %>% select(how, prop_how = `%`)
-tabla_2 <- tea %>%
-  count(how, price) %>% 
-  group_by(how) %>% 
-  mutate(prop = round(100 * n / sum(n))) %>% 
-  select(-n) 
-tabla_2 %>%
-  spread(how, prop, fill = 0) %>% 
-  kable() 
-```
+
+price              tea bag   tea bag+unpackaged   unpackaged
+----------------  --------  -------------------  -----------
+p_branded               41                   21           14
+p_cheap                  3                    1            3
+p_private label          9                    4            3
+p_unknown                6                    1            0
+p_upscale                8                   20           56
+p_variable              32                   52           25
 
 Para facilitar la comparación podemos calcular *perfiles columna*. Comparamos cada una de las columnas con la columna marginal (la tabla de tipo de estilo de té):
 
-```{r tabla_perfile2, echo=FALSE, message = FALSE, warning=FALSE}
-tabla <- tea %>% 
-  count(how, price) %>% 
-  group_by(how) %>% 
-  mutate(prop_price = (100 * n / sum(n))) %>% 
-  group_by(price) %>% 
-  mutate(prom_prop = mean(prop_price)) %>% 
-  mutate(perfil = (prop_price / prom_prop - 1) %>% round(2))  
-```
 
-```{r kable_perfiles, echo = FALSE, message = FALSE, warning=FALSE}
-precio_prom <- tabla %>% 
-  distinct(price, prom_prop) %>%
-  mutate(promedio = round(prom_prop)) %>% 
-  select(price, promedio)
-tabla_perfil <- tabla %>%   
-  select(how, price, perfil) %>% 
-  spread(how, perfil, fill = -1) 
-tabla_2 <- tabla_perfil %>% 
-  gather(how, prop_price, -price)
 
-tab_out <- tabla_perfil %>% left_join(precio_prom) %>%
-    arrange(desc(`tea bag`)) %>%
-    kable(escape = F, digits = 2)
-tab_out
-```
+
+price              tea bag   tea bag+unpackaged   unpackaged   promedio
+----------------  --------  -------------------  -----------  ---------
+p_private label       0.72                -0.22        -0.49          5
+p_unknown             0.72                -0.72        -1.00          4
+p_branded             0.62                -0.16        -0.45         25
+p_cheap               0.30                -0.53         0.23          2
+p_variable           -0.12                 0.44        -0.31         36
+p_upscale            -0.71                -0.28         0.98         28
 
 Leemos esta tabla como sigue: por ejemplo, los compradores de té suelto (`unpacked`) compran té fino (`upscale`) a una tasa casi el doble (0.98) que el promedio. 
 
 También podemos graficar como:
 
-```{r perfiles_grafica, fig.width = 6, fig.height = 2, echo = FALSE, message = FALSE, warning=FALSE}
-tabla_ordenada <- tabla %>% 
-    ungroup %>% 
-    left_join(tabla %>% 
-    ungroup %>% 
-    filter(how == "tea bag") %>% 
-    select(price, perfil_tea = perfil)) %>% 
-    mutate(precio = fct_reorder(price, perfil_tea))
-g_perfil <- ggplot(tabla_ordenada,
-    aes(x = precio, xend = precio, y = perfil, yend = 0, group = how)) + 
-    geom_point() + geom_segment() + facet_wrap(~how) +
-    geom_hline(yintercept = 0 , colour = "gray") + coord_flip()
-g_perfil
-```
+![](ExamenParcial_files/figure-gfm/perfiles_grafica-1.png)<!-- -->
 
 **Observación**: hay dos maneras de construir la columna promedio: tomando los porcentajes sobre todos los datos, o promediando los porcentajes de las columnas como en este ejemplo.
 
@@ -111,7 +68,8 @@ g_perfil
 
 Primero definimos la funcion bootstrap, la cual seleccionará las muestras aleatoreas con reemplazo, y posterior mente calcula la estadística de interés, que en este caso son los *perfiles columna*.
 
-```{r perfiles boot}
+
+```r
 perfiles_boot <- function(x){
   m <- sample_n(x, size =  300 , replace = TRUE)
   tabla <- m %>% 
@@ -127,13 +85,15 @@ perfiles_boot <- function(x){
 
 Despues corremos $B = 10000$ replicaciones Bootstrap.
 
-```{r perfiles_repeticiones, cache=TRUE}
+
+```r
 perfiles_rep <- rerun(10000, perfiles_boot(tea)) %>% bind_rows(.id = 'muestra')
 ```
 
 Posteriormente calculamos los errores estándard
 
-```{r perfiles_errores_est}
+
+```r
 perfiles_se <- perfiles_rep %>% 
   group_by(how, price) %>% 
   summarise(se = sd(perfil))
@@ -141,29 +101,41 @@ perfiles_se <- perfiles_rep %>%
 
 Por último calculamos los intervalos
 
-```{r perfiles_intervalos, message=FALSE}
 
+```r
 perfiles_int <- tabla %>% 
   left_join(perfiles_se) %>% 
   mutate(Int_inf = perfil+qnorm(0.025)*se, Int_sup = perfil+qnorm(0.975)*se)
 
 kable(select(perfiles_int, how, price, perfil, Int_inf, Int_sup), digits = 2)
-
 ```
+
+
+
+how                  price              perfil   Int_inf   Int_sup
+-------------------  ----------------  -------  --------  --------
+tea bag              p_branded            0.62      0.28      0.96
+tea bag              p_cheap              0.30     -0.37      0.97
+tea bag              p_private label      0.72      0.12      1.32
+tea bag              p_unknown            0.72      0.10      1.34
+tea bag              p_upscale           -0.71     -0.86     -0.56
+tea bag              p_variable          -0.12     -0.32      0.08
+tea bag+unpackaged   p_branded           -0.16     -0.44      0.12
+tea bag+unpackaged   p_cheap             -0.53     -1.09      0.03
+tea bag+unpackaged   p_private label     -0.22     -0.75      0.31
+tea bag+unpackaged   p_unknown           -0.72     -1.08     -0.36
+tea bag+unpackaged   p_upscale           -0.28     -0.55     -0.01
+tea bag+unpackaged   p_variable           0.44      0.18      0.70
+unpackaged           p_branded           -0.45     -0.82     -0.08
+unpackaged           p_cheap              0.23     -0.52      0.98
+unpackaged           p_private label     -0.49     -1.05      0.07
+unpackaged           p_upscale            0.98      0.68      1.28
+unpackaged           p_variable          -0.31     -0.63      0.01
 
 
 2. Modifica la última gráfica para representar los intervalos de confianza.
 
-```{r perfiles_intervalos_grafica, , fig.width = 6, fig.height = 2, echo = FALSE, message = FALSE, warning=FALSE}
-perfiles_int %>% 
-ggplot() +
-  geom_segment(aes(y = price, yend = price, x = Int_inf, xend = Int_sup), size = 1) +
-  geom_point(aes(x = perfil, y = price), size = 2) +
-  facet_wrap(how~.) +
-  labs(x = 'perfil',
-       y = 'precio') +
-  theme_light()
-```
+![](ExamenParcial_files/figure-gfm/perfiles_intervalos_grafica, -1.png)<!-- -->
 
 3. Comenta tus observaciones.
 
@@ -182,7 +154,8 @@ Recordemos que ante la pregunta ¿cuántas muestras bootstrap se necesitan? el e
 
 Retomemos el ejemplo de la media de las calificaciones de ENLACE de español 3o de primaria en el estado de México. Nos interesa la media de las calificaciones y usaremos el estimador *plug-in*.
 
-```{r enlace, echo = FALSE, warning=FALSE, message=FALSE}
+
+```r
 library(estcomp)
 # universo
 enlace <- enlacep_2013 %>% 
@@ -201,10 +174,10 @@ enlace_muestra <- sample_n(enlace, n) %>%
 
 1. Crea un intervalo del 90% para $\hat{\theta}$ usando los percentiles de la distribución bootstrap, y $B=100$ replicaciones.
 
-Primero creamos la función bootstrap que genera las muestras y calcula el parámetro, en este caso, la mediana.
+Primero creamos la función bootstrap
 
-```{r enlace boot}
 
+```r
 enlace_boot <- function(x,col){
   col <- enquo(col)
   n <- nrow(x)
@@ -218,18 +191,22 @@ enlace_boot <- function(x,col){
 
 Posteriormente se hacen las $B=100$ simulaciones bootstrap.
 
-```{r enlace repeticiones}
+
+```r
 enlace_rep <- rerun(100, enlace_boot(enlace,esp_3))%>%
   flatten_dbl()
 ```
 
 Por último, calculamos el intervalos usando los percentiles de la distrubucion bootstrap.
-```{r enlace intervalo}
-en_int <- quantile(enlace_rep, c(0.05, 0.95))
-en_int
+
+```r
+quantile(enlace_rep, c(0.05, 0.95))
 ```
 
-Las calificaciones de 3er año de primaria en el estado de México se encuentra en un intervalo al 95% de confianza entre `r en_int[1]` y `r en_int[2]` puntos.
+```
+##  5% 95% 
+## 546 549
+```
 
 
 2. Podemos estimar el error estándar de Monte Carlo de los extremos de los intervalos (percentiles 0.05 y 0.95) haciendo bootstrap de la distribución bootstrap:
@@ -238,7 +215,7 @@ Las calificaciones de 3er año de primaria en el estado de México se encuentra 
   
 Primero construimos la función bootstrap de la distribución bootstrap
 
-```{r enlace muestra bootstrap}
+```r
 enlace_boot_boot <- function(x){
   n <- length(x)
   muestra <- sample(x, size = n, replace = TRUE)
@@ -248,14 +225,16 @@ enlace_boot_boot <- function(x){
 
 Con la función hacemos las repeticiones
 
-```{r enlace boot repeticiones, cache=TRUE}
+
+```r
 enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>%
   bind_rows(.id = 'muestra')
 ```
 
 
   + Calcula la desviación estándar de los percentiles (una para cada extremo), esta será tu aproximación al error de Monte Carlo
-```{r enlace boot es}
+
+```r
 EMC100 <- map_dbl(enlace_boot_rep, sd)
 ```
 
@@ -265,28 +244,45 @@ EMC100 <- map_dbl(enlace_boot_rep, sd)
 
 Para el caso de $B = 100$
 
-```{r enlace MC100}
+
+```r
 EMC100[2:3]
 ```
 
+```
+##    SE_inf    SE_sup 
+## 0.2094879 0.1596374
+```
+
 Para el caso de $B = 1000$
-```{r enlace MC1000, cache=TRUE}
+
+```r
 enlace_rep <- rerun(1000, enlace_boot(enlace,esp_3))%>%flatten_dbl()
 enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>%
   bind_rows(.id = 'muestra')
 map_dbl(enlace_boot_rep, sd)[2:3]
 ```
 
+```
+##    SE_inf    SE_sup 
+## 0.0000000 0.0890622
+```
+
 Para el caso de $B = 10000$
-```{r enlace MC10000, cache=TRUE}
+
+```r
 enlace_rep <- rerun(10000, enlace_boot(enlace,esp_3))%>%flatten_dbl()
 enlace_boot_rep <- rerun(1000,enlace_boot_boot(enlace_rep)) %>%
   bind_rows(.id = 'muestra')
 map_dbl(enlace_boot_rep, sd)[2:3]
 ```
 
+```
+##     SE_inf     SE_sup 
+## 0.00000000 0.02234949
+```
+
 Las corridas muestran la que el error Monte Carlo va disminuyendo conforme se aumentan el número de replicaciones.
-Con la simulación que obtuvimos vemos que conforme va aumentando el número de replicaciones(simulaciones) el error de Monte Carlo va dismunuyendo, tendiendo a cero, por eso los intervalos que obtuvimos son cada vez más pequeños y cercanos a cero.
 
 #### 3. Cobertura de intervalos de confianza
 
@@ -300,7 +296,8 @@ ii) Genera $10,000$ muestras bootstrap y calcula intervalos de confianza del 95\
 
 
 Primero definimos la función del parámetro
-```{r poisson boot}
+
+```r
 poiss_boot <- function(x, ind){
   exp(-2*mean(x[ind]))
 }
@@ -308,7 +305,8 @@ poiss_boot <- function(x, ind){
 
 Posteriormente definimos la funcion que genera los intervalos de confianza
 
-```{r poisson intervalos}
+
+```r
 poiss_intervalos <- function(n=60) {
   poiss_muestra <- rpois(n,2.5)
   
@@ -323,26 +321,37 @@ poiss_intervalos <- function(n=60) {
 ```
 
 Finalmente, los intervalos son:
-```{r poisson intervales}
+
+```r
 poiss_intervalos() %>% 
   kable(digits = 4)
 ```
 
+
+
+metodo       theta   inferior   superior
+----------  ------  ---------  ---------
+normal       0.005     0.0003     0.0089
+percentil    0.005     0.0023     0.0107
+BCa          0.005     0.0022     0.0101
+
 iii) Revisa si el intervalo de confianza contiene el verdadero valor del parámetro ($\theta=exp(-2\cdot2.5)$), en caso de que no lo contenga registra si falló por la izquierda o falló por la derecha.
 
-Los tres intervalos de confianza contienen el verdadero valor del parámetro `r exp(-2*2.5)`
+Los tres intervalos de confianza contienen el verdadero valor del parámetro 0.0067379
 
 a) Repite el proceso descrito 1000 veces y llena la siguiente tabla:
 
 Primero corremos las 100 repeticiones
 
-```{r poisson repeticiones, cache=TRUE}
+
+```r
 poiss_rep_int <- rerun(1000, poiss_intervalos()) %>% bind_rows(.id = 'muestra')
 ```
 
 Posteriormente calculamos los fallos y combertura
 
-```{r poisson fallos}
+
+```r
 poiss_rep_int <- poiss_rep_int %>% 
   mutate(fallo_izquierda = exp(-2*2.5)<inferior,
          fallo_derecha = exp(-2*2.5)>superior,
@@ -351,7 +360,8 @@ poiss_rep_int <- poiss_rep_int %>%
 
 Así tenemos la siguiente tabla:
 
-```{r poisson tabla}
+
+```r
 poiss_rep_int %>% 
   group_by(metodo) %>% 
   summarise(P_fallo_izquierda = sum(fallo_izquierda)/n(),
@@ -362,11 +372,20 @@ poiss_rep_int %>%
 ```
 
 
+
+metodo       P_fallo_izquierda   P_fallo_derecha   Cobertura   Longitud_promedio
+----------  ------------------  ----------------  ----------  ------------------
+BCa                      0.021             0.022       0.957           0.0117646
+normal                   0.000             0.058       0.942           0.0126198
+percentil                0.027             0.014       0.959           0.0123914
+
+
 La columna cobertura es una estimación de la cobertura del intervalo basada en las simulaciones, para calcularla simplemente escribe el porcentaje de los intervalos que incluyeron el verdadero valor del parámetro. La longitud promedio es la longitud promedio de los intervalos de confianza bajo cada método.
 
 b) Realiza una gráfica de páneles, en cada panel mostrarás los resultados de uno de los métodos (normal, percentiles y BC_a), en el vertical graficarás los límites de los intervalos.
 
-```{r poisson grafica}
+
+```r
   ggplot(poiss_rep_int) +
     geom_pointrange(aes(x = reorder(muestra,theta),
                         ymin = inferior,
@@ -377,13 +396,16 @@ b) Realiza una gráfica de páneles, en cada panel mostrarás los resultados de 
     facet_grid(metodo~.)
 ```
 
+![](ExamenParcial_files/figure-gfm/poisson grafica-1.png)<!-- -->
+
 
 c) Repite los incisos a) y b) seleccionando muestras de tamaño $300$.
 
 
 Primero hacemos las repeticiones con el tamano de muestra 300.
 
-```{r poisson 300, cache=TRUE}
+
+```r
 poiss_rep_int_300 <- rerun(1000, poiss_intervalos(300))%>%
   bind_rows(.id = 'muestra') %>% 
   mutate(fallo_izquierda = exp(-2*2.5)<inferior,
@@ -394,7 +416,8 @@ poiss_rep_int_300 <- rerun(1000, poiss_intervalos(300))%>%
 Así obtenemos la siguiente tabla:
 
 
-```{r poisson tabla 300}
+
+```r
 poiss_rep_int_300 %>% 
   group_by(metodo) %>% 
   summarise(P_fallo_izquierda = sum(fallo_izquierda)/n(),
@@ -404,9 +427,18 @@ poiss_rep_int_300 %>%
   kable()
 ```
 
+
+
+metodo       P_fallo_izquierda   P_fallo_derecha   Cobertura   Longitud_promedio
+----------  ------------------  ----------------  ----------  ------------------
+BCa                      0.020             0.030       0.950           0.0049177
+normal                   0.005             0.050       0.945           0.0049909
+percentil                0.026             0.027       0.947           0.0049767
+
 Y la siguiente gráfica:
 
-```{r poisson grafica 300}
+
+```r
   ggplot(poiss_rep_int_300) +
     geom_pointrange(aes(x = reorder(muestra,theta),
                         ymin = inferior,
@@ -417,7 +449,8 @@ Y la siguiente gráfica:
     facet_grid(metodo~.)
 ```
 
-Con las gráficas se ve claramente el fenómeno de la expansión y la aceleración porque la cobertura al principio esta por debajo del parámetro y conforme se van haciendo las replicaciones poco a poco se va teniendo mayor cobertura del parámetro.El método de intervalos que cubre mas es el método normal aunque al inicio tiene un porcentaje de fallo similar al de los demás métodos.
+![](ExamenParcial_files/figure-gfm/poisson grafica 300-1.png)<!-- -->
+
 
 #### 4. Cobertura en la práctica
 
@@ -427,7 +460,8 @@ En el caso del conteo rápido es posible evaluar la cobertura del intervalo de c
 
 Para elegir la muestra se define la siguiente funcion:
 
-```{r eleccion muestra}
+
+```r
 muestra_2006 <- function(df=election_2006){
   df %>% 
     select(stratum,pri_pvem,pan,panal,prd_pt_conv,psd,otros) %>% 
@@ -444,7 +478,8 @@ muestra_2006 <- function(df=election_2006){
 
 Primer construimos una función para obtener el estimador de razón:
 
-```{r elecciones razon}
+
+```r
 estimador_razon <- function(df){
   df %>%
     pivot_longer(pri_pvem:otros, names_to = 'partido', values_to = 'votos') %>% 
@@ -457,7 +492,8 @@ estimador_razon <- function(df){
 
 Ayudándonos de esta función, se construye una fución para obtener el estimador bootstrap:
 
-```{r elecciones boot}
+
+```r
 elecciones_boot <- function(df=muestra){
   muestra_boot <- df %>% 
     group_by(stratum) %>%
@@ -469,15 +505,16 @@ elecciones_boot <- function(df=muestra){
 
 Asi, podemos obtener una distribucion bootstrap
 
-```{r elecciones dist boot, message=FALSE, cache=TRUE}
+
+```r
 muestra1 <- muestra_2006()
 elecciones_muestras_boot <- rerun(1000,elecciones_boot(muestra1)) %>% bind_rows()
-
 ```
 
 Y con esto el intervalo de confianza:
 
-```{r elecciones intervalo}
+
+```r
 elecciones_pi <- estimador_razon(muestra1)
 elecciones_es <- map_dbl(elecciones_muestras_boot,sd)
 rbind(razon = elecciones_pi) %>% 
@@ -486,12 +523,23 @@ rbind(razon = elecciones_pi) %>%
   t()
 ```
 
+```
+##                   razon    inferior   superior
+## otros       0.028630387 0.028219566 0.02904121
+## pan         0.358575842 0.355941574 0.36121011
+## panal       0.009958717 0.009630307 0.01028713
+## prd_pt_conv 0.352538506 0.350208144 0.35486887
+## pri_pvem    0.223109441 0.221150183 0.22506870
+## psd         0.027187107 0.026838376 0.02753584
+```
+
 
 Evalúa la cobertura del intervalo para cada candidato a lo largo de las 100 muestras, presenta los resultados en una tabla que incluya la longitud media de los intervalos y la cobertura observada.
 
 Para hacer las 100 repeticiones, definimos la funcion siguiente:
 
-```{r elecciones repeticion}
+
+```r
 elecciones_boot_rep <- function(df=election_2006){
   muestra <- muestra_2006(df)
   razon_pi <- estimador_razon(muestra)
@@ -510,14 +558,16 @@ elecciones_boot_rep <- function(df=election_2006){
 
 Con esta funcion corremos las 100 repeticiones:
 
-```{r elecciones repeticiones, message=FALSE, echo=TRUE, cache=TRUE}
+
+```r
 elecciones_repeticiones <- rerun(100, elecciones_boot_rep()) %>% 
   bind_rows(.id = 'repeticion')
 ```
 
 Los resultados se presentan en la siguiente tabla:
 
-```{r elecciones tabla}
+
+```r
 elecciones_repeticiones %>% 
 mutate(fallo_izquierda = razon<inferior,
        fallo_derecha = superior<razon,
@@ -529,6 +579,17 @@ summarise(fallo_izquierda = sum(fallo_izquierda)/n(),
           longitud = mean(longitud)) %>% 
   kable(round = 4)
 ```
+
+
+
+partido        fallo_izquierda   fallo_derecha   cobertura    longitud
+------------  ----------------  --------------  ----------  ----------
+otros                        0               0           1   0.0010367
+pan                          0               0           1   0.0052655
+panal                        0               0           1   0.0005689
+prd_pt_conv                  0               0           1   0.0046776
+pri_pvem                     0               0           1   0.0039224
+psd                          0               0           1   0.0006787
 
 
 **Opicional (punto extra):** Las muestras con las que se estima en el conteo 
@@ -579,8 +640,9 @@ La distribución geometrica es un caso particular de la binomian negativa cuando
 
 b) Utiliza el procedimiento descrito para generar observaciones de una variable aleatoria con distribución geométrica y la relación entre la geométrica y la binomial negativa para generar simulaciones de una variable aleatoria con distribución binomial negativa (parámetro p = 0.7, r = 20). Utiliza la semilla 341285 y reporta las primeras 10 simulaciones obtenidas.
 
-Para el caso de la geometrica usamos directamente la fórmula.
-```{r sim geometrica}
+Para el caso de la geometrica tenemos:
+
+```r
 set.seed(341285)
 sim_geometrica <- function(p, n=1){
   U <- runif(n)
@@ -590,18 +652,26 @@ sim_geometrica <- function(p, n=1){
 
 sim_geometrica(0.7,10)  
 ```
+
+```
+##  [1] 1 1 1 1 2 2 1 1 2 1
+```
   
 
-Dado que la binomial negativa se puede ver como una serie de geométricas, hasta juntar el número de éxitos *k* deseados, puede usarse la función definida arriba para simular la binomial negativa. De esta manera tenemos::
+    
+Para el caso de la binomial negativa tenemos:
 
-```{r sim binneg}
 
+```r
 sim_binn <- function(p,r){
   sum(sim_geometrica(p,n=r))
 }
 
 rerun(10,sim_binn(0.7,20)) %>% flatten_dbl()
+```
 
+```
+##  [1] 25 28 28 31 29 35 34 30 29 30
 ```
 c) Verifica la relación
 $$p_{j+1}=\frac{j(1-p)}{j+1-r}p_j$$
@@ -611,9 +681,8 @@ semilla y reporta las primeras 10 simulaciones.
 
 $$ \frac{p_{j +1}}{p_j} = \frac{\frac{j!}{(j+1-r)!(r-1)!}p^r(1-p)^{j+1-r}}{\frac{(j-1)!}{(j-r)!(r-1)!}p^r(1-p)^{j-r}}= \frac{j(1 - p) }{j + 1 - r}.$$
 
-Usando esta relación recursiba es posible construir un algoritmo similar al *poisson* visto en clase, el cual se esperaría fera más eficiente al definido usando la relación entre geométrica y binomial negativa.
 
-```{r simulacion binneg 2}
+```r
 set.seed(341285)
 sim_binn_rec <- function(p,r){
   U <- runif(1)
@@ -631,35 +700,33 @@ sim_binn_rec <- function(p,r){
 rerun(10, sim_binn_rec(0.7,20)) %>% flatten_dbl()
 ```
 
+```
+##  [1] 30 29 31 30 26 25 33 27 25 40
+```
+
 
 d) Realiza 10,000 simulaciones usando cada uno de los algoritmos y compara el 
 tiempo de ejecución (puedes usar la función `system.time()`.
 
-```{r binneg tiempo}
+
+```r
 system.time(rerun(10000, sim_binn(0.7,20)))
+```
+
+```
+##    user  system elapsed 
+##    0.07    0.00    0.07
+```
+
+```r
 system.time(rerun(10000, sim_binn_rec(0.7,20)))
 ```
 
-Como se esperaba, en la función recursiva de la binomial el tiempo de ejecución es menor por el while que tiene la función, ya que solo calcula en función al valor de $U$, sin hacer cálculos innecesarios.
-
-
-e) Genera un histogrma para cada algoritmo (usa 1000 simulaciones) y comparalo con la distribución construida usando la función de R _dnbinom_.
-
-```{r binneg histograma}
-binn_alg1 <- rerun(10000, sim_binn(0.7,20)) %>% flatten_dbl()
-binn_alg2 <- rerun(10000, sim_binn_rec(0.7,20))%>% flatten_dbl()
-binn_R <- (rnbinom(10000, size = 20, p = 0.7)+20) %>% flatten_dbl()
-
-binn_hist <- tibble(Alg1 = binn_alg1,
-                        Alg2 = binn_alg2,
-                        R = binn_R) %>% 
-  pivot_longer(Alg1:R,names_to = 'modelo', values_to = 'valor')
-
-ggplot(binn_hist) + 
-  geom_histogram(aes(valor), breaks = 20:45) +
-  facet_grid(modelo~.) +
-  theme_light()
-
+```
+##    user  system elapsed 
+##    0.05    0.00    0.05
 ```
 
-Los tres algormitmos arrogan resultados muy similares, por lo que posiblemente la diferencia sea la eficiencia de cómputo.
+
+e) Genera un histogrma para cada algoritmo (usa 1000 simulaciones) y comparalo 
+con la distribución construida usando la función de R _dnbinom_.

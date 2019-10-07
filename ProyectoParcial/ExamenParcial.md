@@ -1,7 +1,7 @@
 ExamenParcial
 ================
-Bruno Gonzalez
-2/10/2019
+Yalidt Diaz - 141394
+7/10/2019
 
 ## EXAMEN PARCIAL
 
@@ -12,13 +12,6 @@ En la sección de visualización vimos un ejemplo de tabla de perfiles.
 En este ejercicio construiremos intervalos de confianza para una tabla
 de perfiles usando bootstrap. Usaremos los datos de tomadores de te (del
 paquete @factominer):
-
-``` r
-data(tea)
-tea <- tea %>% 
-  as_tibble %>% 
-  select(how, price, sugar)
-```
 
 Nos interesa ver qué personas compran té suelto (`unpacked`), y de qué
 tipo (`Tea`). Empezamos por ver las proporciones que compran té según su
@@ -35,269 +28,28 @@ ejemplo, queremos investigar si hay diferencias en los patrones de
 compra (en términos de precio o marca) dependiendo del tipo de té que
 consumen.
 
-    ## # A tibble: 6 x 4
-    ##   price           `tea bag` `tea bag+unpackaged` unpackaged
-    ##   <fct>               <dbl>                <dbl>      <dbl>
-    ## 1 p_branded              41                   21         14
-    ## 2 p_cheap                 3                    1          3
-    ## 3 p_private label         9                    4          3
-    ## 4 p_unknown               6                    1          0
-    ## 5 p_upscale               8                   20         56
-    ## 6 p_variable             32                   52         25
+| price            | tea bag | tea bag+unpackaged | unpackaged |
+| :--------------- | ------: | -----------------: | ---------: |
+| p\_branded       |      41 |                 21 |         14 |
+| p\_cheap         |       3 |                  1 |          3 |
+| p\_private label |       9 |                  4 |          3 |
+| p\_unknown       |       6 |                  1 |          0 |
+| p\_upscale       |       8 |                 20 |         56 |
+| p\_variable      |      32 |                 52 |         25 |
 
 Para facilitar la comparación podemos calcular *perfiles columna*.
 Comparamos cada una de las columnas con la columna marginal (la tabla de
-tipo de estilo de té):
-
-<table>
-
-<thead>
-
-<tr>
-
-<th style="text-align:left;">
-
-price
-
-</th>
-
-<th style="text-align:right;">
-
-tea bag
-
-</th>
-
-<th style="text-align:right;">
-
-tea bag+unpackaged
-
-</th>
-
-<th style="text-align:right;">
-
-unpackaged
-
-</th>
-
-<th style="text-align:right;">
-
-promedio
-
-</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-<tr>
-
-<td style="text-align:left;">
-
-p\_private label
-
-</td>
-
-<td style="text-align:right;">
-
-0.72
-
-</td>
-
-<td style="text-align:right;">
-
-\-0.22
-
-</td>
-
-<td style="text-align:right;">
-
-\-0.49
-
-</td>
-
-<td style="text-align:right;">
-
-5
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-p\_unknown
-
-</td>
-
-<td style="text-align:right;">
-
-0.72
-
-</td>
-
-<td style="text-align:right;">
-
-\-0.72
-
-</td>
-
-<td style="text-align:right;">
-
-\-1.00
-
-</td>
-
-<td style="text-align:right;">
-
-4
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-p\_branded
-
-</td>
-
-<td style="text-align:right;">
-
-0.62
-
-</td>
-
-<td style="text-align:right;">
-
-\-0.16
-
-</td>
-
-<td style="text-align:right;">
-
-\-0.45
-
-</td>
-
-<td style="text-align:right;">
-
-25
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-p\_cheap
-
-</td>
-
-<td style="text-align:right;">
-
-0.30
-
-</td>
-
-<td style="text-align:right;">
-
-\-0.53
-
-</td>
-
-<td style="text-align:right;">
-
-0.23
-
-</td>
-
-<td style="text-align:right;">
-
-2
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-p\_variable
-
-</td>
-
-<td style="text-align:right;">
-
-\-0.12
-
-</td>
-
-<td style="text-align:right;">
-
-0.44
-
-</td>
-
-<td style="text-align:right;">
-
-\-0.31
-
-</td>
-
-<td style="text-align:right;">
-
-36
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-p\_upscale
-
-</td>
-
-<td style="text-align:right;">
-
-\-0.71
-
-</td>
-
-<td style="text-align:right;">
-
-\-0.28
-
-</td>
-
-<td style="text-align:right;">
-
-0.98
-
-</td>
-
-<td style="text-align:right;">
-
-28
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
+tipo de estilo de
+té):
+
+| price            | tea bag | tea bag+unpackaged | unpackaged | promedio |
+| :--------------- | ------: | -----------------: | ---------: | -------: |
+| p\_private label |    0.72 |             \-0.22 |     \-0.49 |        5 |
+| p\_unknown       |    0.72 |             \-0.72 |     \-1.00 |        4 |
+| p\_branded       |    0.62 |             \-0.16 |     \-0.45 |       25 |
+| p\_cheap         |    0.30 |             \-0.53 |       0.23 |        2 |
+| p\_variable      |  \-0.12 |               0.44 |     \-0.31 |       36 |
+| p\_upscale       |  \-0.71 |             \-0.28 |       0.98 |       28 |
 
 Leemos esta tabla como sigue: por ejemplo, los compradores de té suelto
 (`unpacked`) compran té fino (`upscale`) a una tasa casi el doble (0.98)
@@ -314,7 +66,9 @@ porcentajes de las columnas como en este ejemplo.
 1.  Utiliza bootstrap para crear intervalos de confianza sobre los
     perfiles de la última tabla.
 
-Primero definimos la funcion bootstrap
+Primero definimos la funcion bootstrap, la cual seleccionará las
+muestras aleatoreas con reemplazo, y posterior mente calcula la
+estadística de interés, que en este caso son los *perfiles columna*.
 
 ``` r
 perfiles_boot <- function(x){
@@ -330,8 +84,8 @@ perfiles_boot <- function(x){
 }
 ```
 
-Despues corresmos las
-repeticiones
+Despues corremos \(B = 10000\) replicaciones
+Bootstrap.
 
 ``` r
 perfiles_rep <- rerun(10000, perfiles_boot(tea)) %>% bind_rows(.id = 'muestra')
@@ -351,11 +105,7 @@ Por último calculamos los intervalos
 perfiles_int <- tabla %>% 
   left_join(perfiles_se) %>% 
   mutate(Int_inf = perfil+qnorm(0.025)*se, Int_sup = perfil+qnorm(0.975)*se)
-```
 
-    ## Joining, by = c("how", "price")
-
-``` r
 kable(select(perfiles_int, how, price, perfil, Int_inf, Int_sup), digits = 2)
 ```
 
@@ -384,12 +134,35 @@ kable(select(perfiles_int, how, price, perfil, Int_inf, Int_sup), digits = 2)
 
 ![](ExamenParcial_files/figure-gfm/perfiles_intervalos_grafica,%20-1.png)<!-- -->
 
-3.  Comenta tus observaciones. En la categoria de teabag la mayor tasa
-    de compra son los precios “private label y unknown” que son .72 con
-    un intervalo de confianza entre .10 y 1.34. Lo cual nos indica que
-    este patron de comportamiento es alto en esa categoria porque los
-    usuarios de tea compran mas a estos precios y por otro lado compran
-    a una tasa negativa a precio upscale.
+3.  Comenta tus observaciones.
+
+En la categoria de “tea bag” la mayor tasa de compra corresponde a los
+precios “private label” y “unknown” que son .72 aproximadamente, sin
+embargo el intervalo deconfianza para ambdos casos es relativamente
+alto, lo que le quita certidumbre a la estimación. Por otro lado, en est
+misma categoría, los que tienen menor perfil de compra es “p\_upscale”,
+con un intervalo muy chico lo que permite concluir con mayor certeza que
+este patrón se mantiene en la población total.
+
+En el caso de “tea\_bag+unpackaged” la mayor tasa de compra es a una
+precio “p\_variable”,cuyo intervalo se enceuntra entre .18 y.70, y la
+menor tasa(negativa) es a precio “p\_known”. Por útimo, en la categoría
+unpackaged la mayor tasa de compra es a precio “p\_upscale” a una tasa
+de casi el doble .89 con un intervalo de confianza de .68 y 1.28, en el
+caso de la menor tasa de compra se obtuvó que la menor fue a precio
+p\_private\_label.
+
+En general, aquellos intervalos con mayor rango son aquellos donde hay
+menos observaciones(‘p\_cheap’, ‘p\_private label’,‘p\_unknown’). Estos
+intervalos con tanta variación y que tienen una longuitud (segmento) muy
+amplia no son tan confiables, se esperaría que la longuitud fuera lo
+menor posible para tener mayor certeza de que valor tomaría la variable
+estimada.
+
+En conclusión pareciera que el mejor comportamiento de compra se
+desarrolla en la categoría p\_unpackaged a un precio upscale, por lo que
+se recomendaría trabajar en dicho segmento, porque ahí la gente tiene un
+perfil de compra mas agudo que en los demás casos.
 
 #### 2\. Cuantificando el error Monte Carlo
 
@@ -461,7 +234,7 @@ quantile(enlace_rep, c(0.05, 0.95))
 
   - Selecciona muestras con reemplazo de tamaño \(B\) de la distribución
     bootstrap,
-      - Calcula los percentiles de interés (0.05 y 0.95),
+  - Calcula los percentiles de interés (0.05 y 0.95),
 
 Primero construimos la función bootstrap de la distribución bootstrap
 
@@ -857,7 +630,7 @@ un número aleatorio \(U\) y seleccionando \(j\) tal que
 \[1-q^{j-1} \leq U \leq 1-q^j\]
 
 Esto es, podemos definir \(X\) como: \[X=min\{j : (1-p)^j < 1-U\}\]
-usando que el logaritmo es una función monótona (i.e. \(a<b\) implica
+usando que el logaritmo es una función monótona (i.e. \(a<b\) implica
 \(log(a)<log(b)\)) obtenemos que podemos expresar \(X\) como
 \[X=min\big\{j : j \cdot log(q) < log(1-U)\big\}\]
 \[=min\big\{j : j > log(U)/log(q)\big\}\] entonces
@@ -953,14 +726,14 @@ system.time(rerun(10000, sim_binn(0.7,20)))
 ```
 
     ##    user  system elapsed 
-    ##    0.06    0.00    0.06
+    ##    0.07    0.00    0.07
 
 ``` r
 system.time(rerun(10000, sim_binn_rec(0.7,20)))
 ```
 
     ##    user  system elapsed 
-    ##    0.07    0.00    0.06
+    ##    0.05    0.00    0.05
 
 5)  Genera un histogrma para cada algoritmo (usa 1000 simulaciones) y
     comparalo con la distribución construida usando la función de R
