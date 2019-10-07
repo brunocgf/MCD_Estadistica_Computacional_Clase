@@ -697,6 +697,154 @@ Y la siguiente gráfica:
 
 ![](ExamenParcial_files/figure-gfm/poisson%20grafica%20300-1.png)<!-- -->
 
+#### 4\. Cobertura en la práctica
+
+En el caso del conteo rápido es posible evaluar la cobertura del
+intervalo de confianza bootstrap usando los resultados de elecciones
+pasadas, para ello usaremos los resultados de las elecciones 2006 (datos
+`election_2006` del paquete `estcomp`) repetirás los siguientes dos
+pasos 100 veces (asegurate de que tu ejercicio de simulación sea
+replicable):
+
+1.  Selecciona una muestra estratificada de `election_2006` usando los
+    tamaños de muestra que indica la tabla `strata_sample_2006` (donde
+    `n` era el tamaño de muestra por estrato y `N` es el número de
+    casillas en el mismo).
+
+Para elegir la muestra se define la siguiente funcion:
+
+``` r
+muestra_2006 <- function(df=election_2006){
+  df %>% 
+    select(stratum,pri_pvem,pan,panal,prd_pt_conv,psd,otros) %>% 
+    left_join(strata_sample_2006) %>%
+    split(.$stratum) %>% 
+    map_df(~sample_n(., size=first(.$n)))
+}
+```
+
+2.  Utiliza estimador de razón y bootstrap para construir intervalos de
+    confianza para todos los candidatos.
+
+Primer construimos una función para obtener el estimador de razón:
+
+``` r
+estimador_razon <- function(df){
+  df %>%
+    pivot_longer(pri_pvem:otros, names_to = 'partido', values_to = 'votos') %>% 
+    mutate(v_total = N*votos/n, total = sum(v_total)) %>% 
+    group_by(partido) %>% 
+    summarise(p=sum(v_total)/mean(total)) %>% 
+    pivot_wider(names_from = partido, values_from = p)
+}
+```
+
+Ayudándonos de esta función, se construye una fución para obtener el
+estimador bootstrap:
+
+``` r
+elecciones_boot <- function(df=muestra){
+  muestra_boot <- df %>% 
+    group_by(stratum) %>%
+    sample_frac(size = 1, replace = TRUE) %>% 
+    ungroup()
+    estimador_razon(muestra_boot)
+}
+```
+
+Asi, podemos obtener una distribucion bootstrap
+
+``` r
+muestra1 <- muestra_2006()
+elecciones_muestras_boot <- rerun(1000,elecciones_boot(muestra1)) %>% bind_rows()
+```
+
+Y con esto el intervalo de confianza:
+
+``` r
+elecciones_pi <- estimador_razon(muestra1)
+elecciones_es <- map_dbl(elecciones_muestras_boot,sd)
+rbind(razon = elecciones_pi) %>% 
+  rbind(inferior = elecciones_pi + elecciones_es*qnorm(0.025)) %>% 
+  rbind(superior =elecciones_pi + elecciones_es*qnorm(0.975)) %>% 
+  t()
+```
+
+    ##                   razon    inferior   superior
+    ## otros       0.028630387 0.028219566 0.02904121
+    ## pan         0.358575842 0.355941574 0.36121011
+    ## panal       0.009958717 0.009630307 0.01028713
+    ## prd_pt_conv 0.352538506 0.350208144 0.35486887
+    ## pri_pvem    0.223109441 0.221150183 0.22506870
+    ## psd         0.027187107 0.026838376 0.02753584
+
+Evalúa la cobertura del intervalo para cada candidato a lo largo de las
+100 muestras, presenta los resultados en una tabla que incluya la
+longitud media de los intervalos y la cobertura observada.
+
+Para hacer las 100 repeticiones, definimos la funcion siguiente:
+
+``` r
+elecciones_boot_rep <- function(df=election_2006){
+  muestra <- muestra_2006(df)
+  razon_pi <- estimador_razon(muestra)
+  muestras_boot <- rerun(1000,elecciones_boot(muestra)) %>% bind_rows()
+  error <- map_dbl(muestras_boot,sd)
+  
+  rbind(razon=razon_pi) %>% 
+    rbind(inferior = razon_pi+error*qnorm(0.025)) %>% 
+    rbind(superior = razon_pi+error*qnorm(0.975)) %>% 
+    t() %>% 
+    as.data.frame() %>% 
+    rownames_to_column('partido')
+    
+}
+```
+
+Con esta funcion corremos las 100 repeticiones:
+
+``` r
+elecciones_repeticiones <- rerun(100, elecciones_boot_rep()) %>% 
+  bind_rows(.id = 'repeticion')
+```
+
+Los resultados se presentan en la siguiente tabla:
+
+``` r
+elecciones_repeticiones %>% 
+mutate(fallo_izquierda = razon<inferior,
+       fallo_derecha = superior<razon,
+       longitud = superior-inferior) %>% 
+group_by(partido) %>% 
+summarise(fallo_izquierda = sum(fallo_izquierda)/n(),
+          fallo_derecha = sum(fallo_derecha)/n(),
+          cobertura = 1 - fallo_izquierda - fallo_derecha,
+          longitud = mean(longitud)) %>% 
+  kable(round = 4)
+```
+
+| partido       | fallo\_izquierda | fallo\_derecha | cobertura |  longitud |
+| :------------ | ---------------: | -------------: | --------: | --------: |
+| otros         |                0 |              0 |         1 | 0.0010367 |
+| pan           |                0 |              0 |         1 | 0.0052655 |
+| panal         |                0 |              0 |         1 | 0.0005689 |
+| prd\_pt\_conv |                0 |              0 |         1 | 0.0046776 |
+| pri\_pvem     |                0 |              0 |         1 | 0.0039224 |
+| psd           |                0 |              0 |         1 | 0.0006787 |
+
+**Opicional (punto extra):** Las muestras con las que se estima en el
+conteo rápido nunca llegan completas, y los faltantes suelen presentar
+patrones, por ejemplo, las casillas en las zonas rurales tienen mayor
+probabilidad de no llegar. Repite el ejercicio de simulación de arriba
+añadiendo un paso de casillas faltantes, lo que debes hacer es que una
+vez simulada una muestra *completa* cada casilla se censura de acuerdo a
+cierta probabilidad (tu la eliges como desees), y esta probabilidad
+puede depender, por ejemplo, de si la casilla es rural o urbana o quizá
+puede variar por estado. Elige uno (o más) procedimiento(s) de censura
+de casillas y evalúa la cobertura de los intervalos en este(os)
+escenario(s). Puedes explorar las variables disponibles viendo la
+documentación de los datos (`?election_2006`).
+
 #### 5\. Simulación de variables aleatorias
 
 Recuerda que una variable aleatoria \(X\) tiene una distribución
@@ -805,14 +953,14 @@ system.time(rerun(10000, sim_binn(0.7,20)))
 ```
 
     ##    user  system elapsed 
-    ##    0.09    0.00    0.09
+    ##    0.06    0.00    0.06
 
 ``` r
 system.time(rerun(10000, sim_binn_rec(0.7,20)))
 ```
 
     ##    user  system elapsed 
-    ##    0.06    0.00    0.06
+    ##    0.07    0.00    0.06
 
 5)  Genera un histogrma para cada algoritmo (usa 1000 simulaciones) y
     comparalo con la distribución construida usando la función de R
