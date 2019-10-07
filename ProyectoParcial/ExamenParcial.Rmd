@@ -648,7 +648,7 @@ e) Genera un histogrma para cada algoritmo (usa 1000 simulaciones) y comparalo c
 ```{r binneg histograma}
 binn_alg1 <- rerun(10000, sim_binn(0.7,20)) %>% flatten_dbl()
 binn_alg2 <- rerun(10000, sim_binn_rec(0.7,20))%>% flatten_dbl()
-binn_R <- (rnbinom(10000, size = 20, p = 0.7)+20) %>% flatten_dbl()
+binn_R <- (rnbinom(10000, size = 20, p = 0.7)+20) 
 
 binn_hist <- tibble(Alg1 = binn_alg1,
                         Alg2 = binn_alg2,
