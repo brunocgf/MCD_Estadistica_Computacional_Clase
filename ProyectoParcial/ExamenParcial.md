@@ -175,27 +175,11 @@ Retomemos el ejemplo de la media de las calificaciones de ENLACE de
 español 3o de primaria en el estado de México. Nos interesa la media de
 las calificaciones y usaremos el estimador *plug-in*.
 
-``` r
-library(estcomp)
-# universo
-enlace <- enlacep_2013 %>% 
-    janitor::clean_names() %>% 
-    mutate(id = 1:n()) %>% 
-    select(id, cve_ent, turno, tipo, esp_3 = punt_esp_3, esp_6 = punt_esp_6, 
-        n_eval_3 = alum_eval_3, n_eval_6 = alum_eval_6) %>% 
-    na.omit() %>% 
-    filter(esp_3 > 0, esp_6 > 0, n_eval_3 > 0, n_eval_6 > 0, cve_ent == "15")
-set.seed(16021)
-n <- 300
-# muestra
-enlace_muestra <- sample_n(enlace, n) %>% 
-    mutate(clase = "muestra")
-```
-
 1.  Crea un intervalo del 90% para \(\hat{\theta}\) usando los
     percentiles de la distribución bootstrap, y \(B=100\) replicaciones.
 
-Primero creamos la función bootstrap
+Primero creamos la función bootstrap que genera las muestras y calcula
+el parámetro, en este caso, la mediana.
 
 ``` r
 enlace_boot <- function(x,col){
@@ -220,11 +204,15 @@ Por último, calculamos el intervalos usando los percentiles de la
 distrubucion bootstrap.
 
 ``` r
-quantile(enlace_rep, c(0.05, 0.95))
+en_int <- quantile(enlace_rep, c(0.05, 0.95))
+en_int
 ```
 
     ##  5% 95% 
     ## 546 549
+
+Las calificaciones de 3er año de primaria en el estado de México se
+encuentra en un intervalo al 95% de confianza entre 546 y 549 puntos.
 
 2.  Podemos estimar el error estándar de Monte Carlo de los extremos de
     los intervalos (percentiles 0.05 y 0.95) haciendo bootstrap de la
@@ -300,7 +288,11 @@ map_dbl(enlace_boot_rep, sd)[2:3]
     ## 0.00000000 0.02234949
 
 Las corridas muestran la que el error Monte Carlo va disminuyendo
-conforme se aumentan el número de replicaciones.
+conforme se aumentan el número de replicaciones. Con la simulación que
+obtuvimos vemos que conforme va aumentando el número de
+replicaciones(simulaciones) el error de Monte Carlo va dismunuyendo,
+tendiendo a cero, por eso los intervalos que obtuvimos son cada vez más
+pequeños y cercanos a cero.
 
 #### 3\. Cobertura de intervalos de confianza
 
@@ -470,6 +462,13 @@ Y la siguiente gráfica:
 
 ![](ExamenParcial_files/figure-gfm/poisson%20grafica%20300-1.png)<!-- -->
 
+Con las gráficas se ve claramente el fenómeno de la expansión y la
+aceleración porque la cobertura al principio esta por debajo del
+parámetro y conforme se van haciendo las replicaciones poco a poco se
+va teniendo mayor cobertura del parámetro.El método de intervalos que
+cubre mas es el método normal aunque al inicio tiene un porcentaje de
+fallo similar al de los demás métodos.
+
 #### 4\. Cobertura en la práctica
 
 En el caso del conteo rápido es posible evaluar la cobertura del
@@ -630,7 +629,7 @@ un número aleatorio \(U\) y seleccionando \(j\) tal que
 \[1-q^{j-1} \leq U \leq 1-q^j\]
 
 Esto es, podemos definir \(X\) como: \[X=min\{j : (1-p)^j < 1-U\}\]
-usando que el logaritmo es una función monótona (i.e. \(a<b\) implica
+usando que el logaritmo es una función monótona (i.e. \(a<b\) implica
 \(log(a)<log(b)\)) obtenemos que podemos expresar \(X\) como
 \[X=min\big\{j : j \cdot log(q) < log(1-U)\big\}\]
 \[=min\big\{j : j > log(U)/log(q)\big\}\] entonces
@@ -660,7 +659,7 @@ lanzamientos antes del primer exito.
     p = 0.7, r = 20). Utiliza la semilla 341285 y reporta las primeras
     10 simulaciones obtenidas.
 
-Para el caso de la geometrica tenemos:
+Para el caso de la geometrica usamos directamente la fórmula.
 
 ``` r
 set.seed(341285)
@@ -675,7 +674,10 @@ sim_geometrica(0.7,10)
 
     ##  [1] 1 1 1 1 2 2 1 1 2 1
 
-Para el caso de la binomial negativa tenemos:
+Dado que la binomial negativa se puede ver como una serie de
+geométricas, hasta juntar el número de éxitos *k* deseados, puede
+usarse la función definida arriba para simular la binomial negativa. De
+esta manera tenemos::
 
 ``` r
 sim_binn <- function(p,r){
@@ -694,6 +696,10 @@ la semilla y reporta las primeras 10
 simulaciones.
 
 \[ \frac{p_{j +1}}{p_j} = \frac{\frac{j!}{(j+1-r)!(r-1)!}p^r(1-p)^{j+1-r}}{\frac{(j-1)!}{(j-r)!(r-1)!}p^r(1-p)^{j-r}}= \frac{j(1 - p) }{j + 1 - r}.\]
+
+Usando esta relación recursiba es posible construir un algoritmo similar
+al *poisson* visto en clase, el cual se esperaría fera más eficiente al
+definido usando la relación entre geométrica y binomial negativa.
 
 ``` r
 set.seed(341285)
@@ -726,15 +732,42 @@ system.time(rerun(10000, sim_binn(0.7,20)))
 ```
 
     ##    user  system elapsed 
-    ##    0.07    0.00    0.07
+    ##    0.08    0.00    0.08
 
 ``` r
 system.time(rerun(10000, sim_binn_rec(0.7,20)))
 ```
 
     ##    user  system elapsed 
-    ##    0.05    0.00    0.05
+    ##    0.08    0.00    0.08
+
+Como se esperaba, en la función recursiva de la binomial el tiempo de
+ejecución es menor por el while que tiene la función, ya que solo
+calcula en función al valor de \(U\), sin hacer cálculos innecesarios.
 
 5)  Genera un histogrma para cada algoritmo (usa 1000 simulaciones) y
     comparalo con la distribución construida usando la función de R
     *dnbinom*.
+
+<!-- end list -->
+
+``` r
+binn_alg1 <- rerun(10000, sim_binn(0.7,20)) %>% flatten_dbl()
+binn_alg2 <- rerun(10000, sim_binn_rec(0.7,20))%>% flatten_dbl()
+binn_R <- (rnbinom(10000, size = 20, p = 0.7)+20)
+
+binn_hist <- tibble(Alg1 = binn_alg1,
+                        Alg2 = binn_alg2,
+                        R = binn_R) %>% 
+  pivot_longer(Alg1:R,names_to = 'modelo', values_to = 'valor')
+
+ggplot(binn_hist) + 
+  geom_histogram(aes(valor), breaks = 20:45) +
+  facet_grid(modelo~.) +
+  theme_light()
+```
+
+![](ExamenParcial_files/figure-gfm/binneg%20histograma-1.png)<!-- -->
+
+Los tres algormitmos arrogan resultados muy similares, por lo que
+posiblemente la diferencia sea la eficiencia de cómputo.
