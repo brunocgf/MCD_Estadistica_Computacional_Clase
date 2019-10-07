@@ -5,6 +5,7 @@ author:
 - "Bruno Gonzalez - 150370"
 date: "7/10/2019"
 output: 
+  pdf_document: default
   github_document: default
 
 ---
@@ -78,7 +79,6 @@ tabla_perfil <- tabla %>%
   spread(how, perfil, fill = -1) 
 tabla_2 <- tabla_perfil %>% 
   gather(how, prop_price, -price)
-
 tab_out <- tabla_perfil %>% left_join(precio_prom) %>%
     arrange(desc(`tea bag`)) %>%
     kable(escape = F, digits = 2)
@@ -141,13 +141,10 @@ perfiles_se <- perfiles_rep %>%
 Por último calculamos los intervalos
 
 ```{r perfiles_intervalos, message=FALSE}
-
 perfiles_int <- tabla %>% 
   left_join(perfiles_se) %>% 
   mutate(Int_inf = perfil+qnorm(0.025)*se, Int_sup = perfil+qnorm(0.975)*se)
-
 kable(select(perfiles_int, how, price, perfil, Int_inf, Int_sup), digits = 2)
-
 ```
 
 
@@ -203,7 +200,6 @@ enlace_muestra <- sample_n(enlace, n) %>%
 Primero creamos la función bootstrap que genera las muestras y calcula el parámetro, en este caso, la mediana.
 
 ```{r enlace boot}
-
 enlace_boot <- function(x,col){
   col <- enquo(col)
   n <- nrow(x)
@@ -471,7 +467,6 @@ Asi, podemos obtener una distribucion bootstrap
 ```{r elecciones dist boot, message=FALSE, cache=TRUE}
 muestra1 <- muestra_2006()
 elecciones_muestras_boot <- rerun(1000,elecciones_boot(muestra1)) %>% bind_rows()
-
 ```
 
 Y con esto el intervalo de confianza:
@@ -586,7 +581,6 @@ sim_geometrica <- function(p, n=1){
   q <- (1-p)
   as.integer(log(U)/log(q))+1
 }
-
 sim_geometrica(0.7,10)  
 ```
   
@@ -594,13 +588,10 @@ sim_geometrica(0.7,10)
 Dado que la binomial negativa se puede ver como una serie de geométricas, hasta juntar el número de éxitos *k* deseados, puede usarse la función definida arriba para simular la binomial negativa. De esta manera tenemos::
 
 ```{r sim binneg}
-
 sim_binn <- function(p,r){
   sum(sim_geometrica(p,n=r))
 }
-
 rerun(10,sim_binn(0.7,20)) %>% flatten_dbl()
-
 ```
 c) Verifica la relación
 $$p_{j+1}=\frac{j(1-p)}{j+1-r}p_j$$
@@ -626,7 +617,6 @@ sim_binn_rec <- function(p,r){
   }
   i
 }
-
 rerun(10, sim_binn_rec(0.7,20)) %>% flatten_dbl()
 ```
 
@@ -647,22 +637,15 @@ e) Genera un histogrma para cada algoritmo (usa 1000 simulaciones) y comparalo c
 ```{r binneg histograma}
 binn_alg1 <- rerun(10000, sim_binn(0.7,20)) %>% flatten_dbl()
 binn_alg2 <- rerun(10000, sim_binn_rec(0.7,20))%>% flatten_dbl()
-<<<<<<< HEAD
-binn_R <- (rnbinom(10000, size = 20, p = 0.7)+20)
-=======
 binn_R <- (rnbinom(10000, size = 20, p = 0.7)+20) 
->>>>>>> 25d8606cd3af70aa2214e05b9ac0ef4e84707d4f
-
 binn_hist <- tibble(Alg1 = binn_alg1,
                         Alg2 = binn_alg2,
                         R = binn_R) %>% 
   pivot_longer(Alg1:R,names_to = 'modelo', values_to = 'valor')
-
 ggplot(binn_hist) + 
   geom_histogram(aes(valor), breaks = 20:45) +
   facet_grid(modelo~.) +
   theme_light()
-
 ```
 
 Los tres algormitmos arrogan resultados muy similares, por lo que posiblemente la diferencia sea la eficiencia de cómputo.
