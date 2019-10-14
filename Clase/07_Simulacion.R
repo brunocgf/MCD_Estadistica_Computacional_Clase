@@ -30,5 +30,44 @@ inv_ej <- function(n = 1000){
 }
     
   
+
+
+
+# Simular gamma(3/2,1)
+
+cociente <- function(x){
+  3/2 * 1/base::gamma(3/2) * x ^(1/2)*exp(-x/3)
 }
 
+gamma <- function(){
+  
+  c <- 1.26
+  x <- rexp(1,2/3)
+  u <- runif(1)
+  while(u>cociente(x)/c){
+
+    u <- runif(1)
+    x <- rexp(1,2/3)
+  }
+  x
+}
+
+cociente_normal <- function(x){
+  exp(((x-1)^2)/2)
+}
+
+normal <- function(){
+  
+  y <- rexp(1,1)
+  u <- runif(1)
+  
+  while(u>cociente_normal(y)){
+    y <- rexp(1,1)
+    u <- runif(1)
+  }
+  y
+}
+
+n <- rerun(1000,normal()) %>% flatten_dbl()
+
+n <- c(n,-n)
