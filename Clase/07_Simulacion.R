@@ -65,7 +65,7 @@ normal <- function(){
     y <- rexp(1,1)
     u <- runif(1)
   }
-  y
+  y*(-1)^round(runif(1))
 }
 
 n <- rerun(1000,normal()) %>% flatten_dbl()
