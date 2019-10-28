@@ -8,45 +8,30 @@ output: github_document
 ```{r, include=FALSE}
 library(tidyverse)
 library(MASS)
+library(nullabor)
 ```
 
 
-## 9. Inferencia visual y simulación e modelos {-}
+## 9. Inferencia visual y simulación e modelos
 
-#### 1. Análisis discriminante {-}
+#### 1. Análisis discriminante
 
-* Existen métodos de clasificación (supervisados o no supervisados) para formar 
-grupos en términos de variables que describen a los individuos. 
+* Existen métodos de clasificación (supervisados o no supervisados) para formar grupos en términos de variables que describen a los individuos. 
 
-* Estos métodos (análisis discriminante, o k-means, por ejemplo), pretenden 
-formar grupos compactos, bien separados entre ellos. Cuando aplicamos el método, 
-obtenemos clasificadores basados en las variables de entrada.
+* Estos métodos (análisis discriminante, o k-means, por ejemplo), pretenden formar grupos compactos, bien separados entre ellos. Cuando aplicamos el método, obtenemos clasificadores basados en las variables de entrada.
 
-* La pregunta es: __¿los grupos resultantes son producto de patrones que se 
-generalizan a la población, o capitalizaron en variación aleatoria para 
-formarse?__
+* La pregunta es: ¿los grupos resultantes son producto de patrones que se generalizan a la población, o capitalizaron en variación aleatoria para formarse?
 
-* Especialmente cuando tenemos muchas mediciones de los individuos, y una muestra relativamente chica, 
-
-* Es relativamente fácil encontrar combinaciones de variables que separan los 
-grupos, aunque estas combinaciones y diferencias están basadas en ruido y no 
+* Especialmente cuando tenemos muchas mediciones de los individuos, y una muestra relativamente chica, es relativamente fácil encontrar combinaciones de variables que separan los grupos, aunque estas combinaciones y diferencias están basadas en ruido y no 
 generalizan a la población.
 
-En el siguiente ejemplo, tenemos 4 grupos de avispas (50 individuos en total),
-y para cada individuo se miden expresiones de 42 genes distintos. 
+En el siguiente ejemplo, tenemos 4 grupos de avispas (50 individuos en total), y para cada individuo se miden expresiones de 42 genes distintos. 
 
-La pregunta es: ¿Podemos separar a los grupos de avispas dependiendo de sus 
-mediciones?
+La pregunta es: ¿Podemos separar a los grupos de avispas dependiendo de sus mediciones?
 
-Usaremos análisis discriminante para buscar proyecciones de los datos en 
-dimensión baja de forma que los grupos sean lo más compactos y separados 
-posibles. Para probar qué tan bien funciona este método, podemos seguir el 
-protocolo lineup. 
+Usaremos análisis discriminante para buscar proyecciones de los datos en dimensión baja de forma que los grupos sean lo más compactos y separados posibles. Para probar qué tan bien funciona este método, podemos seguir el protocolo lineup. 
 
-El siguiente código es como se procedería en análisis discriminante en R usando
-los datos:
-
-```{r, eval=FALSE}
+```{r, include=FALSE}
 data(wasps) # incluídos en nullabor
 wasp_lda <- MASS::lda(Group~., data = wasps[,-1])
 wasp_ld <- predict(wasp_lda, dimen = 2)$x
@@ -56,19 +41,32 @@ ggplot(true, aes(x = LD1, y = LD2, colour = Group)) +
     theme(aspect.ratio = 1)
 ```
 
-Para generar los conjuntos de datos nulos debes permutar lo columna `Group` de 
-la tabla de datos y repetir los pasos de arriba, realiza esto 19 veces y realiza
-una gráfica de páneles en la que escondas los datos verdaderos entre los datos
-nulos, ¿cuál es tu conclusión?
+Para generar los conjuntos de datos nulos debes permutar lo columna `Group` de la tabla de datos y repetir los pasos de arriba, realiza esto 19 veces y realizauna gráfica de páneles en la que escondas los datos verdaderos entre los datos nulos, ¿cuál es tu conclusión?
+
+```{r, message=FALSE}
+set.seed(99)
+wasp_null <- lineup(
+  null_permute('Group'),
+  n = 19,
+  true
+)
 
 
-#### 2. Simulación de un modelo de regresión {-}
+ggplot(wasp_null, aes(x = LD1, y = LD2, colour = Group)) +
+  geom_point() +
+  facet_wrap(~.sample)
+```
+
+Es claro que los datos verdaderos se encuentran en el panel *3*, por lo que la clasificación sí es resultado de patrone verdaderos.
+
+
+#### 2. Simulación de un modelo de regresión
 
 Los datos beauty consisten en evaluaciones de estudiantes a profesores, los estudiantes calificaron belleza y calidad de enseñanza para distintos cursos en la Universidad de Texas. Las evaluaciones de curso se realizaron al final del semestre y tiempo después $6$ estudiantes que no llevaron el curso realizaron los juicios de belleza. 
 
 Ajustamos el siguiente modelo de regresión lineal usando las variables _edad_ (age), _belleza_ (btystdave), _sexo_ (female) e _inglés no es primera lengua_ (nonenglish) para predecir las evaluaciones del curso (courseevaluation).
 
-```{r}
+```{r, message=FALSE}
 beauty <- readr::read_csv("https://raw.githubusercontent.com/tereom/est-computacional-2018/master/data/beauty.csv")
 fit_score <- lm(courseevaluation ~ age + btystdave + female + nonenglish, 
     data = beauty)

@@ -1,3 +1,7 @@
+
+# simulacion --------------------------------------------------------------
+
+
 library(MASS)
 library(tidyverse)
 
@@ -64,3 +68,28 @@ m_b3_sum <- summary(fit_score)$coeff[3,1]
 sd_b3_sum <- summary(fit_score)$coeff[3,2]
 
 
+# nullabor ----------------------------------------------------------------
+
+library(nullabor)
+library(ggplot2)
+
+data(wasps) # incluídos en nullabor
+
+wasp_lda <- MASS::lda(Group~., data = wasps[,-1])
+wasp_ld <- predict(wasp_lda, dimen = 2)$x
+true <- data.frame(wasp_ld, Group = wasps$Group)
+
+ggplot(true, aes(x = LD1, y = LD2, colour = Group)) + 
+  geom_point() + 
+  theme(aspect.ratio = 1)
+
+wasp_null <- lineup(
+  null_permute('Group'),
+  n = 19,
+  true
+)
+
+
+ggplot(wasp_null, aes(x = LD1, y = LD2, colour = Group)) +
+  geom_point() +
+  facet_wrap(~.sample)

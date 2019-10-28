@@ -16,16 +16,15 @@ Bruno C. Gonzalez
     Cuando aplicamos el método, obtenemos clasificadores basados en las
     variables de entrada.
 
-  - La pregunta es: **¿los grupos resultantes son producto de patrones
-    que se generalizan a la población, o capitalizaron en variación
-    aleatoria para formarse?**
+  - La pregunta es: ¿los grupos resultantes son producto de patrones que
+    se generalizan a la población, o capitalizaron en variación
+    aleatoria para formarse?
 
   - Especialmente cuando tenemos muchas mediciones de los individuos, y
-    una muestra relativamente chica,
-
-  - Es relativamente fácil encontrar combinaciones de variables que
-    separan los grupos, aunque estas combinaciones y diferencias están
-    basadas en ruido y no generalizan a la población.
+    una muestra relativamente chica, es relativamente fácil encontrar
+    combinaciones de variables que separan los grupos, aunque estas
+    combinaciones y diferencias están basadas en ruido y no generalizan
+    a la población.
 
 En el siguiente ejemplo, tenemos 4 grupos de avispas (50 individuos en
 total), y para cada individuo se miden expresiones de 42 genes
@@ -39,23 +38,29 @@ dimensión baja de forma que los grupos sean lo más compactos y separados
 posibles. Para probar qué tan bien funciona este método, podemos seguir
 el protocolo lineup.
 
-El siguiente código es como se procedería en análisis discriminante en R
-usando los datos:
-
-``` r
-data(wasps) # incluídos en nullabor
-wasp_lda <- MASS::lda(Group~., data = wasps[,-1])
-wasp_ld <- predict(wasp_lda, dimen = 2)$x
-true <- data.frame(wasp_ld, Group = wasps$Group)
-ggplot(true, aes(x = LD1, y = LD2, colour = Group)) + 
-    geom_point() + 
-    theme(aspect.ratio = 1)
-```
-
 Para generar los conjuntos de datos nulos debes permutar lo columna
 `Group` de la tabla de datos y repetir los pasos de arriba, realiza esto
-19 veces y realiza una gráfica de páneles en la que escondas los datos
+19 veces y realizauna gráfica de páneles en la que escondas los datos
 verdaderos entre los datos nulos, ¿cuál es tu conclusión?
+
+``` r
+set.seed(99)
+wasp_null <- lineup(
+  null_permute('Group'),
+  n = 19,
+  true
+)
+
+
+ggplot(wasp_null, aes(x = LD1, y = LD2, colour = Group)) +
+  geom_point() +
+  facet_wrap(~.sample)
+```
+
+![](EstComp-Tarea09-BCG_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+Es claro que los datos verdaderos se encuentran en el panel *3*, por lo
+que la clasificación sí es resultado de patrone verdaderos.
 
 #### 2\. Simulación de un modelo de regresión
 
@@ -72,16 +77,6 @@ primera lengua* (nonenglish) para predecir las evaluaciones del curso
 
 ``` r
 beauty <- readr::read_csv("https://raw.githubusercontent.com/tereom/est-computacional-2018/master/data/beauty.csv")
-```
-
-    ## Parsed with column specification:
-    ## cols(
-    ##   .default = col_double()
-    ## )
-
-    ## See spec(...) for full column specifications.
-
-``` r
 fit_score <- lm(courseevaluation ~ age + btystdave + female + nonenglish, 
     data = beauty)
 ```
@@ -161,7 +156,7 @@ ggplot(simulacion) +
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](EstComp-Tarea09-BCG_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](EstComp-Tarea09-BCG_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
   - Realiza un histograma de la diferencia entre la evaluación del curso
     para \(A\) y \(B\).
@@ -176,7 +171,7 @@ ggplot(simulacion) +
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](EstComp-Tarea09-BCG_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](EstComp-Tarea09-BCG_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
   - ¿Cuál es la probabilidad de que \(A\) obtenga una calificación
     mayor?
@@ -188,7 +183,7 @@ calificación mayor:
 sum(simulacion$Diferencia>0)/10000
 ```
 
-    ## [1] 0.3659
+    ## [1] 0.3685
 
 2.  En el inciso anterior obtienes simulaciones de la distribución
     conjunta. Para este ejercicio nos vamos a enfocar en el coeficiente
@@ -218,7 +213,7 @@ ggplot(simula_beta3) +
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](EstComp-Tarea09-BCG_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](EstComp-Tarea09-BCG_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
   - Calcula la media y desviación estándar de las simulaciones y
     comparalas con la estimación y desviación estándar del coeficiente
@@ -233,7 +228,7 @@ m_b3_sum <- summary(fit_score)$coeff[3,1]
 sd_b3_sum <- summary(fit_score)$coeff[3,2]
 ```
 
-En el caso de la media, la simulada 0.1413663 es menor que la obtenidad
+En el caso de la media, la simulada 0.1409341 es menor que la obtenidad
 con el modelo analítico: 0.1410319. Por el otro lado, la desviación
-estándard simulada 0.0328058 es mayor que la obtenida con la regresión
+estándard simulada 0.0324165 es mayor que la obtenida con la regresión
 0.0329142. En ambos casos la diferencia es mínima.
