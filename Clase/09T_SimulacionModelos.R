@@ -93,3 +93,29 @@ wasp_null <- lineup(
 ggplot(wasp_null, aes(x = LD1, y = LD2, colour = Group)) +
   geom_point() +
   facet_wrap(~.sample)
+
+
+# wasp: correcto ----------------------------------------------------------
+
+
+data(wasps)
+
+wasp.lda <- lda(Group~., data=wasps[,-1])
+wasp.ld <- predict(wasp.lda, dimen=2)$x
+true <- data.frame(wasp.ld, Group=wasps$Group)
+
+wasp.sim <- data.frame(LD1=NULL, LD2=NULL, Group=NULL, .n=NULL)
+for (i in 1:19) {
+  x <- wasps
+  x$Group <- sample(x$Group)
+  x.lda <- lda(Group~., data=x[,-1])
+  x.ld <- predict(x.lda, dimen=2)$x
+  sim <- data.frame(x.ld, Group=x$Group, .n=i)
+  wasp.sim <- rbind(wasp.sim, sim)
+}
+
+pos <- sample(1:20, 1)
+d <- lineup(true=true, samples=wasp.sim, pos=pos)
+ggplot(d, aes(x=LD1, y=LD2, colour=Group)) + 
+  facet_wrap(~.sample, ncol=5) +
+  geom_point() + theme(aspect.ratio=1)
