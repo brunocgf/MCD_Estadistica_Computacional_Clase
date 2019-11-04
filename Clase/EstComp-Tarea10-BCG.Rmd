@@ -2,7 +2,7 @@
 title: "EstComp-Tarea10"
 author: "Bruno C. Gonzalez"
 date: "4/11/2019"
-output: html_document
+output: github_document
 ---
 
 ## 10. Simulación muestra y bootstrap paramétrico
