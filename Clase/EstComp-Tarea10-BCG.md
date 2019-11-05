@@ -21,7 +21,7 @@ etapas:
 El estimador será simplemente el porcentaje de hogares del total de la
 muestra que consume refresco. Suponemos que la verdadera proporción es
 cercana a \(0.50\) y que la media de la proporción de interés tiene una
-desviación estándar de \(0.1\) a lo largo de los conglomerados .
+desviación estándar de \(0.1\) a lo largo de los conglomerados.
 
 1.  Supongamos que la muestra total es de \(n=1000\). ¿Cuál es la
     estimación del error estándar para la proporción estimada si
@@ -35,7 +35,71 @@ desviación estándar de \(0.1\) a lo largo de los conglomerados .
 Los costos del levantamiento son: + \(50\) pesos por encuesta. + \(500\)
 pesos por conglomerado
 
-#### Bootstrap paramétrico
+``` r
+muestreo <- function(J, n_total = 1000) {
+    n_cong <- floor(n_total / J)
+    medias <- rnorm(J, 0.5, 0.1)
+    medias <- case_when(
+        medias < 0 ~ 0, 
+        medias > 1 ~ 1,
+        TRUE ~ medias)
+    resp <- rbinom(J, n_cong, medias)
+    sum(resp) / n_total
+}
+errores <- tibble(J = c(1, 10, 100, 1000)) %>% 
+    mutate(
+        sims = map(J, ~(rerun(1000, muestreo(.)) %>% flatten_dbl())), 
+        error_est = map_dbl(sims, sd) %>% round(3)
+            )
+errores
+```
+
+    ## # A tibble: 4 x 3
+    ##       J sims          error_est
+    ##   <dbl> <list>            <dbl>
+    ## 1     1 <dbl [1,000]>     0.102
+    ## 2    10 <dbl [1,000]>     0.035
+    ## 3   100 <dbl [1,000]>     0.018
+    ## 4  1000 <dbl [1,000]>     0.016
+
+``` r
+tamano_muestra <- function(J) {
+    n_total <- max(100, J)
+    ee <- rerun(1000, muestreo(J = J, n_total = n_total)) %>% 
+        flatten_dbl() %>% sd()
+    while(ee > 0.02){
+        n_total = n_total + 20
+        ee <- rerun(500, muestreo(J = J, n_total = n_total)) %>% 
+            flatten_dbl() %>% 
+            sd() %>% 
+            round(3)
+        }
+    list(ee = ee, n_total = n_total, costo = 500 * J + 50 * n_total)
+}
+tamanos <- c(20, 30, 40, 50, 100, 150)
+costos <- map_df(tamanos, tamano_muestra)
+costos$J <- tamanos
+costos
+```
+
+    ## # A tibble: 6 x 4
+    ##      ee n_total  costo     J
+    ##   <dbl>   <dbl>  <dbl> <dbl>
+    ## 1 0.02    16720 846000    20
+    ## 2 0.02     1860 108000    30
+    ## 3 0.02     1160  78000    40
+    ## 4 0.019     980  74000    50
+    ## 5 0.02      580  79000   100
+    ## 6 0.02      570 103500   150
+
+``` r
+ggplot(costos, aes(x = J, y = costo / 1000)) +
+    geom_line() + scale_y_log10() + theme_minimal() +
+    labs(y = "miles de pesos", title = "Costos")
+```
+
+![](EstComp-Tarea10-BCG_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+\#\#\#\# Bootstrap paramétrico
 
 2.  Sean \(X_1,...,X_n \sim N(\mu, 1)\). Sea \(\theta = e^{\mu}\),
     simula una muestra de \(n=100\) observaciones usando \(\mu=5\).
@@ -60,7 +124,7 @@ sim_t <- rnorm(1000,exp(mu_est), se_tetha)
 se_tetha
 ```
 
-    ## [1] 17.18173
+    ## [1] 14.71522
 
 Con esta información construimos el intervalo de confianza.
 
@@ -68,7 +132,7 @@ Con esta información construimos el intervalo de confianza.
 theta+se_tetha*c(qnorm(0.025), qnorm(0.975))
 ```
 
-    ## [1] 114.7376 182.0887
+    ## [1] 119.5719 177.2545
 
   - Repite el inciso anterior usando boostrap paramétrico.
 
@@ -93,7 +157,7 @@ se_bootp <- sd(sim_bootp)
 theta+se_bootp*c(qnorm(0.025), qnorm(0.975))
 ```
 
-    ## [1] 115.4071 181.4192
+    ## [1] 118.9478 177.8785
 
   - Finalmente usa bootstrap no paramétrico y compara tus respuestas.
 
@@ -112,7 +176,7 @@ se_bootnp <- sd(sim_bootnp)
 theta+se_bootnp*c(qnorm(0.025), qnorm(0.975))
 ```
 
-    ## [1] 115.6213 181.2050
+    ## [1] 119.4681 177.3582
 
   - Realiza un histograma de replicaciones bootstrap para cada método,
     estas son estimaciones de la distribución de \(\hat{\theta}\). El
@@ -150,7 +214,7 @@ ggplot(df) +
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](EstComp-Tarea10-BCG_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](EstComp-Tarea10-BCG_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 El metodo que más se aproxima a la simulación es el bootstrap
 parametrico, esto tiene sentido ya que este metodo aprovecha la

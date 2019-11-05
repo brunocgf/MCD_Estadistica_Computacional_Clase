@@ -15,16 +15,17 @@ library(ggplot2)
 
 #### Simulación para calcular tamaños de muestra
 
-Supongamos que queremos hacer una encuesta para estimar la proporción de hogares donde se consume refresco de manera regular, para ello se diseña un muestreo por conglomerados donde los conglomerados están dados por conjuntos de hoagres de tal manera que todos los conglomerados tienen el mismo número de hogares. La selección de la muestra se hará en dos etapas:
+Supongamos que queremos hacer una encuesta para estimar la proporción de 
+hogares donde se consume refresco de manera regular, para ello se diseña un 
+muestreo por conglomerados donde los conglomerados están dados por conjuntos de
+hoagres de tal manera que todos los conglomerados tienen el mismo número de 
+hogares. La selección de la muestra se hará en dos etapas:
     
 1. Seleccionamos $J$ conglomerados de manera aleatoria.
 
 2. En cada conglomerado seleccionames $n/J$ hogares para entrevistar.
 
-El estimador será simplemente el porcentaje de hogares del total 
-de la muestra que consume refresco. Suponemos que la verdadera proporción es 
-cercana a $0.50$ y que la media de la proporción de interés tiene una desviación 
-estándar de $0.1$ a lo largo de los conglomerados .
+El estimador será simplemente el porcentaje de hogares del total de la muestra que consume refresco. Suponemos que la verdadera proporción es cercana a $0.50$ y que la media de la proporción de interés tiene una desviación estándar de $0.1$ a lo largo de los conglomerados.
 
 1. Supongamos que la muestra total es de $n=1000$. ¿Cuál es la estimación del 
 error estándar para la proporción estimada si $J=1,10,100,1000$?
@@ -36,7 +37,45 @@ cumplir el objetivo al menor costo?
 Los costos del levantamiento son: 
     + $50$ pesos por encuesta.
     + $500$ pesos por conglomerado
-   
+
+```{r, cache=TRUE}
+muestreo <- function(J, n_total = 1000) {
+    n_cong <- floor(n_total / J)
+    medias <- rnorm(J, 0.5, 0.1)
+    medias <- case_when(
+        medias < 0 ~ 0, 
+        medias > 1 ~ 1,
+        TRUE ~ medias)
+    resp <- rbinom(J, n_cong, medias)
+    sum(resp) / n_total
+}
+errores <- tibble(J = c(1, 10, 100, 1000)) %>% 
+    mutate(
+        sims = map(J, ~(rerun(1000, muestreo(.)) %>% flatten_dbl())), 
+        error_est = map_dbl(sims, sd) %>% round(3)
+            )
+errores
+tamano_muestra <- function(J) {
+    n_total <- max(100, J)
+    ee <- rerun(1000, muestreo(J = J, n_total = n_total)) %>% 
+        flatten_dbl() %>% sd()
+    while(ee > 0.02){
+        n_total = n_total + 20
+        ee <- rerun(500, muestreo(J = J, n_total = n_total)) %>% 
+            flatten_dbl() %>% 
+            sd() %>% 
+            round(3)
+        }
+    list(ee = ee, n_total = n_total, costo = 500 * J + 50 * n_total)
+}
+tamanos <- c(20, 30, 40, 50, 100, 150)
+costos <- map_df(tamanos, tamano_muestra)
+costos$J <- tamanos
+costos
+ggplot(costos, aes(x = J, y = costo / 1000)) +
+    geom_line() + scale_y_log10() + theme_minimal() +
+    labs(y = "miles de pesos", title = "Costos")
+```
 #### Bootstrap paramétrico
 
 2. Sean $X_1,...,X_n \sim N(\mu, 1)$. Sea $\theta = e^{\mu}$, simula una muestra de $n=100$ observaciones usando $\mu=5$.
