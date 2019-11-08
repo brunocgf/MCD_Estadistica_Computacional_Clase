@@ -22,10 +22,10 @@ Una compañía farmacéutica afirma que su nueva medicina incrementa la probabil
 a) Quieres estimar la probabilidad de concebir un niño para parejas que toman la medicina. ¿Cuál es una inicial apropiada? No tiene que estar centrada en $0.5$ pues esta corresponde a personas que no toman la medicina, y la inicial debe reflejar tu incertidumbre sobre el efecto de la droga.
 
 Dado que tenemos el número de la muestra $n = 50$, podemos partir definiendo a $m$, la proporción de éxitos (concebir un niño) y establecerla como $m = 0.7$. De esta manera:
-$$ \begin{align*}
+$$ \begin{aligned}
 &a = mn = 35 \\
 &b = (1-m)n = 15
-\end{align*}$$
+\end{aligned}$$
 
 Así, podemos definir la distribución a priori de la siguiente manera:
 
