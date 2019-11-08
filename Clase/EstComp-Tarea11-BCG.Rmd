@@ -2,7 +2,8 @@
 title: "EstComp-Tarea11"
 author: "Bruno Gonzalez"
 date: "7/11/2019"
-output: html_document
+output:
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -124,3 +125,23 @@ $\tau = 5$. Entonces la distribución inicial es:
 $$p(\theta)=\frac{1}{\sqrt{2\pi\tau^2}}exp\left(-\frac{1}{2\tau^2}(\theta-\mu)^2\right)$$
 
 Calcula la distribución posterior $p(\theta|x) \propto p(x|\theta)p(\theta)$, usando la inicial y verosimilitud que definimos arriba. Una vez que realices la multiplicación debes identificar el núcleo de una distribución Normal, ¿cuáles son sus parámetros (media y varianza)?
+
+Dado que sabemos que la suma de normales es normal, podemos obtener la distribución fijándonos solo en el exponente.
+
+$$
+\begin{aligned}
+p(\theta|x) & \propto p(x|\theta)p(\theta) \\
+& = \frac{1}{\sqrt{2\pi\sigma^2}}exp\left(-\frac{1}{2\sigma^2}(x-\theta)^2\right) \frac{1}{\sqrt{2\pi\tau^2}}exp\left(-\frac{1}{2\tau^2}(\theta-\mu)^2\right) \\
+& \propto exp\left(-\frac{1}{2\sigma^2}(x-\theta)^2 -\frac{1}{2\tau^2}(\theta-\mu)^2\right) \\
+& = exp\left(\frac{-\tau^2x^2+2\tau^2x\theta-\tau^2\theta^2-\sigma^2\theta^2+2\sigma^2\theta\mu-\sigma^2\mu^2}{2\sigma^2\tau^2} \right)\\
+& = exp \left( -\theta^2\left(\frac{\tau^2+\sigma^2}{2\sigma^2\tau^2}\right) + \theta\left(\frac{2\tau^2x+2\sigma^2\mu}{2\sigma^2\tau^2}\right)-\left(\frac{\tau^2x^2+\sigma^2\mu^2}{2\sigma^2\tau^2} \right) \right) \\
+& = exp \left(-\frac{\theta^2}{2}\left(\frac{1}{\sigma^2}+\frac{1}{\tau^2}\right) + \frac{2\theta}{2}\left(\frac{x}{\sigma^2} + \frac{\mu}{\tau^2}\right) - \frac{1}{2}\left(\frac{x^2}{\sigma^2}+\frac{\mu^2}{\tau^2}\right) \right)\\
+& = exp \left(-\frac{1}{2\left(\frac{1}{\sigma^2}+\frac{1}{\tau^2} \right)^{-1}} \left(\theta^2 - 2\theta\left(\frac{x}{\sigma^2} + \frac{\mu}{\tau^2}\right) \left(\frac{1}{\sigma^2}+\frac{1}{\tau^2} \right)^{-1} + \left(\frac{x^2}{\sigma^2}+\frac{\mu^2}{\tau^2}\right)\left(\frac{1}{\sigma^2}+\frac{1}{\tau^2} \right)^{-1}\right)\right)\\
+& = exp \left(-\frac{1}{2\left(\frac{1}{\sigma^2}+\frac{1}{\tau^2} \right)^{-1}} \left(\theta^2 + \left(\frac{x}{\sigma}+\frac{\mu}{\tau}\right)\left(\frac{1}{\sigma^2}+\frac{1}{\tau^2} \right)^{-1}\right)^2\right)\\
+\end{aligned}
+$$
+De esta manera tenemos que la distribución posterior se distribuye normal con parámetros:
+
+$$
+p(\theta|x)  \sim N \left( \left(\frac{x}{\sigma}+\frac{\mu}{\tau}\right)\left(\frac{1}{\sigma^2}+\frac{1}{\tau^2} \right)^{-1}, \left(\frac{1}{\sigma^2}+\frac{1}{\tau^2} \right)^{-1} \right)
+$$
