@@ -2,10 +2,16 @@
 title: "EstComp-Tarea12"
 author: "Bruno Gonzalez"
 date: "21/11/2019"
-output: html_document
+output: pdf_document
 ---
 
 ## 12-Metropolis
+
+```{r conf, include=FALSE}
+library(ggplot2)
+library(gridExtra)
+```
+
 
 Regresamos al ejercicio de IQ de la tarea anterior, en ésta hiciste cálculos para el caso de una sola observación. En este ejercicio consideramos el caso en que observamos una muestra $x=\{x_1,...,x_N\}$, y utilizaremos Metrópolis para obtener una muestra de la distribución posterior.
 
@@ -86,7 +92,7 @@ caminatA <- function(theta){
 Ahora generamos la caminata
 
 ```{r}
-pasos <- 1000
+pasos <- 5000
 camino <- numeric(pasos)
 camino[1] <- 100
 
@@ -99,19 +105,74 @@ for (i in 2:pasos){
 
 f) Grafica los valores de la cadena para cada paso.
 
-g)  Elimina los valores correspondientes a la etapa de calentamiento y realiza
-un histograma de la distribución posterior.
+Primero construimos el data frame para usar *ggplot2*.
 
-h)  Si calcularas la posterior de manera analítica obtendrías que $p(x|\theta)$
-es normal con media:
+```{r}
+caminata <- data.frame(pasos = 1:pasos, theta = camino)
+```
+
+Ahora podemos construir la gráfica.
+
+```{r}
+ggplot(caminata, aes(x=pasos, y = theta)) +
+  geom_point(size = 0.6) +
+  geom_path(alpha = 0.4) +
+  xlab("tiempo") +
+  theme_light()
+```
+
+
+g)  Elimina los valores correspondientes a la etapa de calentamiento y realiza un histograma de la distribución posterior.
+
+En este caso la caminata converge con bastante validez, por lo que solo se eliminaran los primeros $100$ valores.
+
+```{r}
+h1 <- ggplot(caminata[100:5000,], aes(x=theta)) +
+  geom_histogram(bins = 15, alpha=0.7, fill = "#0072B2", color = "#0072B2") +
+  labs(title = 'Simulación Metropolis', y = element_blank()) +
+  theme_light()
+
+h1
+```
+
+
+h)  Si calcularas la posterior de manera analítica obtendrías que $p(x|\theta)$ es normal con media:
 $$\frac{\sigma^2}{\sigma^2 + N\tau^2}\mu + \frac{N\tau^2}{\sigma^2 + N \tau^2}\bar{x}$$
 y varianza
 $$\frac{\sigma^2 \tau^2}{\sigma^2 + N\tau^2}$$
 
-donde $\bar{x}=1/N\sum_{i=1}^N x_i$ es la media de los valores observados.
-Realiza simulaciones de la distribución posterior calculada de manera analítica
-y comparalas con el histograma de los valores generados con Metropolis.
+donde $\bar{x}=1/N\sum_{i=1}^N x_i$ es la media de los valores observados. Realiza simulaciones de la distribución posterior calculada de manera analítica y comparalas con el histograma de los valores generados con Metropolis.
 
-i) ¿Cómo utilizarías los parámetros $\mu, \tau^2$ para describir un escenario 
-donde sabes poco del verdadero valor de la media $\theta$?
+Primero definimos los parámetros
+
+```{r}
+m_s <- (20^2/(20^2+100*15^2))*150 + ((100*15^2)/(20^2+100*15^2))*130
+v_s <- ((20^2)*(15^2))/(20^2+100*15^2)
+```
+
+Usando estos parámetros podemos hacer la simulación
+
+```{r}
+simulacion <- rnorm(4900, m_s, sqrt(v_s))
+simulacion <- data.frame(tiempo = 1:4900, theta = simulacion)
+```
+
+Ahora podemos comparar los dos histogramas
+
+```{r}
+h2 <- ggplot(simulacion, aes(x=theta)) +
+  geom_histogram(bins = 15, alpha=0.7, fill = "#009E73", color = "#009E73") +
+  labs(title = 'Simulación distribución posterior', y = element_blank()) +
+  theme_light()
+
+grid.arrange(h1,h2,ncol=2)
+
+```
+
+En ambos casos la distribución es muy parecida.
+
+
+i) ¿Cómo utilizarías los parámetros $\mu, \tau^2$ para describir un escenario donde sabes poco del verdadero valor de la media $\theta$?
+
+Podeamos realizar una serie de experimentos para obtener datos y a partir de ellos usar algún metodo de análisis bayesiano, como Metrópolis, para aproximar una distribución posterior.
 
