@@ -61,4 +61,11 @@ norm_posterior_inc_warmup <- extract(norm_fit,
                                      inc_warmup = TRUE)
 
 
-shinystan::
+
+
+x <- c(0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1)
+coin <- c(rep(1, 5), rep(2, 5), rep(3, 5), rep(4, 5), rep(5, 5))
+
+stan_jer_fit <- sampling(stan_jer_cpp, 
+                         data = list(x = x, coin = coin, nCoins = 5,  N = 25), chains = 3,
+                         iter = 1000, warmup = 500)

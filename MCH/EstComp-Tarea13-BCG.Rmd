@@ -1,0 +1,183 @@
+---
+title: "EstComp-Tarea13"
+author: "Bruno Gonzalez"
+date: "2/12/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(rstan)
+library(bayesplot)
+```
+
+
+## 13-Modelos jerárquicos {-}
+
+En este ejercicio definirás un modelo jerárquico para la incidencia de tumores en grupos de conejos a los que se suministró una medicina. Se realizaron 71 experimentos distintos utilizando la misma medicina. 
+
+Considerando que cada conejo proviene de un experimento distinto, se desea estudiar $\theta_j$, la probabilidad de desarrollar un tumor en el $j$-ésimo grupo, este parámetro variará de grupo a grupo.
+
+Denotaremos $y_{ij}$ la observación en el $i$-ésimo conejo perteneciente al $j$-ésimo experimento, $y_{ij}$ puede tomar dos valores: 1 indicando que el conejo desarrolló tumor y 0 en el caso contrario, por tanto la verosimilitud sería:
+
+$$y_{ij} \sim Bernoulli(\theta_j)$$
+
+Adicionalmente se desea estimar el efecto medio de la medicina a lo largo de los grupos $\mu$, por lo que utilizaremos un modelo jerárquico como sigue:
+
+$$\theta_j \sim Beta(a, b)$$
+
+donde 
+
+$$a=\mu \kappa$$
+$$b=(1-\mu)\kappa$$
+
+Finalmente asignamos una distribución a los hiperparámetros $\mu$ y $\kappa$,
+
+$$\mu \sim Beta(A_{\mu}, B_{\mu})$$
+
+$$\kappa \sim Gamma(S_{\kappa}, R_{\kappa})$$
+
+1. Si piensas en este problema como un lanzamiento de monedas, ¿a qué corresponden las monedas y los lanzamientos?
+
+Cada lanzamiento sería equivalente a que cada conejo tenga o no el tumor y cada experimento es una moneda distinta.
+
+
+2. Los datos en el archivo contienen las observaciones de los 71 experimentos, cada renglón corresponde a una observación. 
+
+```{r, include=FALSE}
+url <- 'https://raw.githubusercontent.com/tereom/est-computacional-2019/master/data/rabbits.csv'
+
+x <- read_csv(url)
+
+```
+
++ Utiliza Stan para ajustar un modelo jerárquico como el descrito arriba y usando una inicial $Beta(1, 1)$ y una $Gamma(1, 0.1)$ para $\mu$ y $\kappa$ respectivamente. Revisa la sección de modelos jerárquicos-Stan, puedes trabajar sobre el modelo que se propone aquí.
+
+Primero definimos el modelo de starn
+```{stan output.var='rabbits'}
+data {
+    int N;
+    int y[N];
+    int nExp;
+    int Exp[N];
+}
+parameters {
+    real<lower=0,upper=1> theta[nExp];
+    real<lower=0,upper=1> mu;
+    real<lower=0>  kappa;
+}
+transformed parameters {
+    real<lower=0>  a;
+    real<lower=0>  b;
+    a = mu * kappa;
+    b = (1-mu) * kappa;
+}
+model {
+    theta ~ beta(a,b);
+    y ~ bernoulli(theta[Exp]);
+    mu ~ beta(1, 1);
+    kappa ~ gamma(1, 0.1);
+}
+
+```
+
+A continuación entrenamos el modelo
+
+```{r, cache=TRUE}
+
+stan_rabbits_fit <- sampling(rabbits,
+                             data = list(y = x$tumor, Exp = x$experiment, N = 1810, nExp = 71),
+                             chains = 3,
+                             iter = 1000,
+                             warmup = 500)
+```
+
++ Revisa la salida de Stan para diagnosticar convergencia y para asegurar un tamaño efectivo de muestra razonable. 
+
+
++ Realiza un histograma de la distribución posterior de $\mu$, $\kappa$.  Comenta tus resultados.
+
+El histograma para $\mu$ es
+
+```{r}
+par_sim <- extract(stan_rabbits_fit)
+par_sim_mu <- par_sim$mu
+
+hist(par_sim_mu)
+ 
+```
+
+El histograma para $\kappa$ es
+
+```{r}
+par_sim_kappa <- par_sim$kappa
+ 
+hist(par_sim_kappa)
+```
+
+
+3. Ajusta un nuevo modelo utilizando una iniciales $Beta(10, 10)$ y $Gamma(0.51, 0.01)$ para $\mu$ y $\kappa$ (lo demás quedará igual). 
+
+```{stan output.var='rabbits2'}
+data {
+    int N;
+    int y[N];
+    int nExp;
+    int Exp[N];
+}
+parameters {
+    real<lower=0,upper=1> theta[nExp];
+    real<lower=0,upper=1> mu;
+    real<lower=0>  kappa;
+}
+transformed parameters {
+    real<lower=0>  a;
+    real<lower=0>  b;
+    a = mu * kappa;
+    b = (1-mu) * kappa;
+}
+model {
+    theta ~ beta(a,b);
+    y ~ bernoulli(theta[Exp]);
+    mu ~ beta(1, 1);
+    kappa ~ gamma(1, 0.1);
+}
+
+```
+
+```{r, cache=TRUE}
+
+stan_rabbits_fit2 <- sampling(rabbits2,
+                             data = list(y = x$tumor, Exp = x$experiment, N = 1810, nExp = 71),
+                             chains = 3,
+                             iter = 1000,
+                             warmup = 500)
+
+par_sim2 <- extract(stan_rabbits_fit2)
+par_sim_mu2 <- par_sim2$mu
+par_sim_kappa2 <- par_sim2$kappa
+
+```
+
++ Realiza una gráfica con las medias posteriores de los parámetros $\theta_j$ bajo los dos escenarios de distribuciones iniciales: en el eje horizontal grafica las medias posteriores del modelo ajustado en el paso anterior y en el eje vertical las medias posteriores del segundo modelo . ¿Cómo se comparan? ¿A qué se deben las diferencias?
+
+
+Primero graficamos los valores para $\mu$.
+
+```{r}
+plot(par_sim_mu,par_sim_mu2)
+```
+
+
+Y posteriormente graficamos los valores para $\kappa$.
+
+```{r}
+plot(par_sim_kappa,par_sim_kappa2)
+```
+
+
+
+
+
+
