@@ -9,6 +9,8 @@ output: pdf_document
 
 ```{r, include=FALSE}
 library(tidyverse)
+library(nullabor)
+set.seed(54)
 ```
 
 
@@ -35,7 +37,8 @@ wages <- read_csv("data/wages.csv",
 
 ```{r}
 tidy_wages <- wages %>% 
-  filter(hgc >= 9, hgc <=11)
+  filter(hgc >= 9, hgc <=11) %>% 
+  select(1:8)
 ```
 
 
@@ -74,21 +77,47 @@ f_wages_sample <- function(n=10){
 ```
 Posteriormente creamos el subconjunto de datos.
 
-```{r}
-sample_wages <- f_wages_sample()
+```{r, message=FALSE}
+sample_wages <- f_wages_sample(80)
 ```
 
 
 2 **Prueba de hipótesis visual**
 
-* El escenario nulo consiste en que no hay diferencia entre las razas. Para
-generar los datos nulos, la etiqueta de raza de cada sujeto se permuta,
-es decir, se reasigna la raza de cada sujeto de manera aleatoria (para todas las
-mediciones de un sujeto dado se reasigna una misma raza). Genera 9 conjuntos de
-datos nulos y para cada uno ajusta una curva _loess_ siguiendo la instrucción de
-la gráfica de arriba. Crea una gráfica de paneles donde incluyas los 9
-conjuntos nulos y los datos reales, estos últimos estarán escondidos de manera
-aleatoria.
+```{r, eval=FALSE, echo=FALSE}
+ggplot(sample_wages, aes(x = exper, y = lnw)) +
+  geom_point(alpha = 0.3, size = 1.5) + 
+  geom_smooth(aes(group = raza, color = raza), method = "loess", se = FALSE) +
+  theme_light()
+```
+
+
+
+* El escenario nulo consiste en que no hay diferencia entre las razas. Para generar los datos nulos, la etiqueta de raza de cada sujeto se permuta, es decir, se reasigna la raza de cada sujeto de manera aleatoria (para todas las mediciones de un sujeto dado se reasigna una misma raza). Genera 9 conjuntos de datos nulos y para cada uno ajusta una curva _loess_ siguiendo la instrucción de
+la gráfica de arriba. Crea una gráfica de paneles donde incluyas los 9 conjuntos nulos y los datos reales, estos últimos estarán escondidos de manera aleatoria.
+
+Primero creamos los datos nulos
+
+```{r, message=FALSE}
+null_wages <- lineup(null_permute('raza'),
+                     n = 9,
+                     sample_wages)
+```
+
+A continuación hacemos las gráficas correspondientes
+
+```{r, message=FALSE, warning=FALSE, results = 'hide'}
+ggplot(null_wages, aes(x = exper, y = lnw)) +
+  geom_point(alpha = 0.3, size = 0.8) + 
+  geom_smooth(aes(group = raza, color = raza), method = "loess", se = FALSE, size=0.5) +
+  facet_wrap(~.sample)
+  theme_light()
+```
+
+
+```{r, eval=FALSE, include==FALSE}
+attr(null_wages,"pos")
+```
 
 * Realiza la siguiente pregunta a una o más personas __que no tomen la clase__:
 
