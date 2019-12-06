@@ -115,7 +115,7 @@ ggplot(null_wages, aes(x = exper, y = lnw)) +
 ```
 
 
-```{r, eval=FALSE, include==FALSE}
+```{r, eval=FALSE, echo=FALSE}
 attr(null_wages,"pos")
 ```
 
