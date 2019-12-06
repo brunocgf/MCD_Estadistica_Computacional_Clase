@@ -2,7 +2,7 @@
 title: "Examen Final"
 author: "Bruno C. Gonzalez"
 date: "4/12/2019"
-output: html_document
+output: pdf_document
 ---
 
 ## Final
@@ -16,7 +16,7 @@ library(tidyverse)
 
 1. **Preparación de los datos**.  
 
-```{r}
+```{r, message=FALSE}
 wages <- read_csv("data/wages.csv",
                   col_types = cols(
                     id = col_integer(),
@@ -27,57 +27,81 @@ wages <- read_csv("data/wages.csv",
                     black = col_integer(),
                     hispanic = col_integer(),
                     hgc = col_integer(),
-                    hgc.9 = col_integer(),
-                    uerate = col_double(),
-                    ue.7 = col_double(),
-                    ue.centert1 = col_double(),
-                    ue.mean = col_double(),
-                    ue.person.cen = col_double(),
-                    ue1 = col_double()
+                    hgc.9 = col_integer()
                   ))
 ```
 
 * Selecciona los sujetos con grado de estudios completado igual a 9, 10 u 11.
 
 ```{r}
-
+tidy_wages <- wages %>% 
+  filter(hgc >= 9, hgc <=11)
 ```
 
 
 * Elimina las observaciones donde el logaritmo del salario (lnw) es mayor a 3.5.
 
-* Crea una variable correspondiente a raza, un sujeto es de raza hispana si 
-la variable hispanic toma el valor 1, de raza negra si la variable black
-toma el valor 1 y de raza blanca si las dos anteriores son cero.
+```{r}
+tidy_wages <- tidy_wages %>% 
+  filter(lnw <= 3.5)
+```
 
-* Crea un subconjunto de la base de datos de tal manera que tengas el mismo 
-número de sujetos distintos en cada grupo de raza. Nota: habrá el mismo número
-de sujetos en cada grupo pero el número de observaciones puede diferir pues los
-sujetos fueron visitados un número distinto de veces. 
+* Crea una variable correspondiente a raza, un sujeto es de raza hispana si la variable hispanic toma el valor 1, de raza negra si la variable black toma el valor 1 y de raza blanca si las dos anteriores son cero.
 
-<!-- 2 **Prueba de hipótesis visual**   -->
+```{r}
+tidy_wages <- tidy_wages %>% 
+  mutate(raza = ifelse(hispanic==1,'hispana',ifelse(black==1,'negra','blanca')))
+```
 
-<!-- * El escenario nulo consiste en que no hay diferencia entre las razas. Para -->
-<!-- generar los datos nulos, la etiqueta de raza de cada sujeto se permuta,  -->
-<!-- es decir, se reasigna la raza de cada sujeto de manera aleatoria (para todas las -->
-<!-- mediciones de un sujeto dado se reasigna una misma raza). Genera 9 conjuntos de -->
-<!-- datos nulos y para cada uno ajusta una curva _loess_ siguiendo la instrucción de -->
-<!-- la gráfica de arriba. Crea una gráfica de paneles donde incluyas los 9 -->
-<!-- conjuntos nulos y los datos reales, estos últimos estarán escondidos de manera -->
-<!-- aleatoria. -->
+* Crea un subconjunto de la base de datos de tal manera que tengas el mismo número de sujetos distintos en cada grupo de raza. Nota: habrá el mismo número de sujetos en cada grupo pero el número de observaciones puede diferir pues los sujetos fueron visitados un número distinto de veces. 
 
-<!-- * Realiza la siguiente pregunta a una o más personas __que no tomen la clase__: -->
+Primero creamos una función que tomo como variable el número de sujetos que se desean incluir
 
-<!-- _Las siguientes 10 gráficas muestran suavizamientos de log(salarios) por años -->
-<!-- de experiencia laboral. Una de ellas usa datos reales y las otras 9 son datos -->
-<!-- nulos, generados bajo el supuesto de que no existe diferencia entre los  -->
-<!-- subgrupos. ¿Cuál es la gráfica más distinta?_ -->
+```{r, message=FALSE}
 
-<!-- Reporta si las personas cuestionadas pudieron distinguir los datos. -->
+f_wages_sample <- function(n=10){
+  sample <- tidy_wages %>% 
+    group_by(id, raza) %>% 
+    summarize() %>%
+    ungroup() %>% 
+    group_by(raza) %>% 
+    sample_n(n)
+  
+  tidy_wages %>% 
+    semi_join(sample)
+}
 
-<!-- * ¿Cuál es tu conclusión de la prueba de hipótesis visual? -->
+```
+Posteriormente creamos el subconjunto de datos.
 
-<!-- * ¿A cuántas personas preguntaste y cuál es el valor p de la prueba? -->
+```{r}
+sample_wages <- f_wages_sample()
+```
+
+
+2 **Prueba de hipótesis visual**
+
+* El escenario nulo consiste en que no hay diferencia entre las razas. Para
+generar los datos nulos, la etiqueta de raza de cada sujeto se permuta,
+es decir, se reasigna la raza de cada sujeto de manera aleatoria (para todas las
+mediciones de un sujeto dado se reasigna una misma raza). Genera 9 conjuntos de
+datos nulos y para cada uno ajusta una curva _loess_ siguiendo la instrucción de
+la gráfica de arriba. Crea una gráfica de paneles donde incluyas los 9
+conjuntos nulos y los datos reales, estos últimos estarán escondidos de manera
+aleatoria.
+
+* Realiza la siguiente pregunta a una o más personas __que no tomen la clase__:
+
+_Las siguientes 10 gráficas muestran suavizamientos de log(salarios) por años
+de experiencia laboral. Una de ellas usa datos reales y las otras 9 son datos
+nulos, generados bajo el supuesto de que no existe diferencia entre los
+subgrupos. ¿Cuál es la gráfica más distinta?_
+
+Reporta si las personas cuestionadas pudieron distinguir los datos.
+
+* ¿Cuál es tu conclusión de la prueba de hipótesis visual?
+
+* ¿A cuántas personas preguntaste y cuál es el valor p de la prueba?
 
 
 <!-- ### 2. Simulación para el cálculo de tamaños de muestra {-} -->
