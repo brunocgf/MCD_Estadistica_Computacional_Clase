@@ -14,17 +14,35 @@ library(tidyverse)
 
 ### 1. Inferencia gráfica
 
-El objetivo del ejercicio es estudiar la relación entre salario y experiencia laboral por raza para aquellos sujetos cuyo año máximo de estudios completados es igual a 9, 10 u 11, estos son sujetos que abandonaron sus estudios durante preparatoria. Seguiremos un enfoque no paramétrico que consiste en ajustar un suavizador para cada grupo de raza (blanco, hispano o negro) como se muestra en la siguiente gráfica.
-
-Utilizaremos una prueba de hipótesis gráfica para determinar si existe una diferencia significativa entre las curvas.
-
 1. **Preparación de los datos**.  
 
 ```{r}
-wages <- read_csv("data/wages.csv")
+wages <- read_csv("data/wages.csv",
+                  col_types = cols(
+                    id = col_integer(),
+                    lnw = col_double(),
+                    exper = col_double(),
+                    ged = col_double(),
+                    postexp = col_double(),
+                    black = col_integer(),
+                    hispanic = col_integer(),
+                    hgc = col_integer(),
+                    hgc.9 = col_integer(),
+                    uerate = col_double(),
+                    ue.7 = col_double(),
+                    ue.centert1 = col_double(),
+                    ue.mean = col_double(),
+                    ue.person.cen = col_double(),
+                    ue1 = col_double()
+                  ))
 ```
 
 * Selecciona los sujetos con grado de estudios completado igual a 9, 10 u 11.
+
+```{r}
+
+```
+
 
 * Elimina las observaciones donde el logaritmo del salario (lnw) es mayor a 3.5.
 
