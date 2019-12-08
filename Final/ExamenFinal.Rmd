@@ -8,9 +8,12 @@ output: pdf_document
 ## Final
 
 ```{r, include=FALSE}
-library(tidyverse)
 library(nullabor)
-set.seed(54)
+library(rstan)
+library(bayesplot)
+library(arm)
+library(tidyverse)
+set.seed(51)
 ```
 
 
@@ -38,7 +41,7 @@ wages <- read_csv("data/wages.csv",
 ```{r}
 tidy_wages <- wages %>% 
   filter(hgc >= 9, hgc <=11) %>% 
-  select(1:8)
+  dplyr::select(1:8)
 ```
 
 
@@ -100,7 +103,7 @@ Primero creamos los datos nulos
 
 ```{r, message=FALSE}
 null_wages <- lineup(null_permute('raza'),
-                     n = 9,
+                     n = 10,
                      sample_wages)
 ```
 
@@ -124,16 +127,19 @@ attr(null_wages,"pos")
 _Las siguientes 10 gráficas muestran suavizamientos de log(salarios) por años
 de experiencia laboral. Una de ellas usa datos reales y las otras 9 son datos
 nulos, generados bajo el supuesto de que no existe diferencia entre los
-subgrupos. ¿Cuál es la gráfica más distinta?_
+subgrupos. ¿Cuál es la gráfica más distinta?
 
 Reporta si las personas cuestionadas pudieron distinguir los datos.
+La persona no pudo distinguir los datos
 
 * ¿Cuál es tu conclusión de la prueba de hipótesis visual?
+No se puede rechazar la hipotesis nula, por lo que no se puede deducir que existe diferencia en los salarios con base en los años trabajados entre los subgrupos
 
 * ¿A cuántas personas preguntaste y cuál es el valor p de la prueba?
+Una persona por lo que el valor p es de $0$.
 
 
-<!-- ### 2. Simulación para el cálculo de tamaños de muestra {-} -->
+### 2. Simulación para el cálculo de tamaños de muestra
 
 <!-- En el conteo rápido del estado de Guanajuato, se calculó el tamaño de muestra -->
 <!-- fijando como objetivo que los intervalos del $95$% de confianza tuvieran una  -->
@@ -214,7 +220,7 @@ Reporta si las personas cuestionadas pudieron distinguir los datos.
 <!-- 3. ¿Qué diseño y tamaño de muestra elegirías? Explica tu respuesta y de  -->
 <!-- ser necesario repite los pasos i-iii para otros valores de $n$. -->
 
-<!-- ### 3. MCMC {-} -->
+### 3. MCMC
 
 <!-- Siguiendo con el conteo rápido de Guanajuato, calcularás intervalos de confianza -->
 <!-- usando el modelo propuesto en @mendoza2016. -->
@@ -264,246 +270,207 @@ Reporta si las personas cuestionadas pudieron distinguir los datos.
 <!-- Reporta estimaciones puntuales (media posterior) e intervalos del 95% de  -->
 <!-- credibilidad para cada candidato. -->
 
-<!-- ### 4. Modelos jerárquicos, Stan y evaluación de ajuste {-} -->
+### 4. Modelos jerárquicos, Stan y evaluación de ajuste
 
-<!-- **Postestratificación** es un método estándar que se utiliza para corregir las  -->
-<!-- estimaciones obtenidas de muestreo probabilístico cuando hay distintas  -->
-<!-- probabilidades de selección y para corregir no respuesta. A grandes rasgos, se  -->
-<!-- divide la población en categorías y se estima la distribución de las respuestas  -->
-<!-- en cada categoría, después se pondera cada categoría de acuerdo a su tamaño en  -->
-<!-- la población. Típicamente las categorías se crean con variables demográficas -->
-<!-- (sexo, edad, ...).  -->
-
-<!-- La dificultad que suele surgir en el proceso de postestratificación es que  -->
-<!-- por una parte se desea crear las celdas lo más finas posible, considerando -->
-<!-- el cruce de muchas variables, con el objetivo de corregir en mayor medida -->
-<!-- posibles sesgos en las estimaciones; sin embargo, conforme aumenta el número de -->
-<!-- celdas el número de respondentes en cada una disminuye (muchas incluso quedan -->
-<!-- vacías) y esto conlleva a que las estimaciones dentro de cada celda sean poco -->
-<!-- precisas. Ante esta dificultad, la propuesta de MRP es modelar las respuestas  -->
-<!-- condicional a las variables de postestratificación, cuando las categorías de la -->
-<!-- postestratificación siguen de manera natural estructuras jerárquicas (como  -->
-<!-- hogares en estados) se puede mejorar la eficiencia de la estimación ajustando -->
-<!-- modelos multinivel.  -->
-
-<!-- Es así que MRP es una extensión a los ajustes de postestratificación clásicos  -->
-<!-- que permite usar más categorías y por tanto información más detallada de la  -->
-<!-- población. Una ventaja adicional es que además hace posible estimar la respuesta  -->
-<!-- en subcategorias demográficas o geográficas. En este ejercicio reproduciremos  -->
-<!-- el modelo que se ajusta en @parkgelmanbafumi lo puedes descargar de [esta liga ](http://www.stat.columbia.edu/~gelman/research/published/parkgelmanbafumi.pdf). -->
-
-<!-- En esta aplicación se utilizan encuestas de opinión pública en EUA, en  -->
-<!-- particular modelamos la probabilidad de que un respondente prefiera al  -->
-<!-- candidato Republicano como presidente y usando los datos de encuestas de  -->
-<!-- *CBS News* levantadas previo a la elección presidencial de 1988.  -->
-
-<!-- Las variables demográficas que determinan las celdas de postestratificación son: -->
-<!-- sexo, raza negra, edad (categórica), grado educativo y estado, si construyéramos  -->
-<!-- las celdas de postestratificación quedarían,  -->
-
-<!-- sexo(2) x raza negra(2) x edad(4) x educación(4) x estado(52) = 3264 -->
-
-<!-- celdas y tenemos únicamente 2193 entrevistas, por lo que un enfoque clásico  -->
-<!-- utilizando todas las variables demográficas disponibles queda descartado. -->
-
-<!-- Ahora, definimos el modelo multinivel a usar, usaremos regresión logística  -->
-<!-- multinivel, en este planteamiento la variable $y_i$ indica si la -->
-<!-- $i$-ésima persona apoyaba al candidato republicano o no, y se agregan todas las -->
-<!-- variables demográficas como covariables. -->
-
-<!-- $$ -->
-<!-- \begin{aligned} -->
-<!--   P(y_i = 1) &= logit^{-1}(\beta^0 + \beta^{mujer}\cdot mujer_i + \beta^{neg}\cdot neg_i+\beta^{mujer, neg}\cdot mujer_i \cdot neg_i+ \\ -->
-<!--   & \beta_{edad(i)}^{edad} +  \beta_{edad(i), edu(i)}^{edad,edu} +  -->
-<!--  \beta_{estado(i)}^{estado}) -->
-<!-- \end{aligned} -->
-<!-- $$ -->
-
-<!-- En este ejemplo la estructura multinivel se reduce al coeficiente de -->
-<!-- estado que se modela con indicadoras de región y una medida del apoyo -->
-<!-- Republicano en el estado reportado en la elección previa. -->
-
-<!-- $$ \beta_{j}\sim N(\beta_{region(j)}^{region}+\beta^{vprev}\cdot vprev_j, \sigma^2_{estado})$$ -->
-
-<!-- Ajustaremos este modelo usando el programa JAGS (Just Another Gibbs Sampler), y  -->
-<!-- utilizamos las estimaciones para hacer predicciones a nivel estado ($\theta_s$): -->
-
-<!-- $$\theta_s=\frac{\sum_{j \in s}N_{j}\pi_j}{\sum_{j \in s}N_{j}}$$ -->
-
-<!-- donde $N_j$ indica el número de individuos en cada estado que  -->
-<!-- pertenecen a la $j$-ésima celda, la información para determinar las $N_j$ se  -->
-<!-- obtendrá del censo de población. -->
-
-<!-- #### Implementación {-} -->
-
-<!-- Datos en [election88](http://www.stat.columbia.edu/~gelman/arm/examples/election88/),  -->
-<!-- o en la carpeta data. -->
-
-<!-- ```{r, eval=FALSE} -->
-<!-- # preparación de los datos -->
-<!-- library(haven) -->
-<!-- # datos de encuestas -->
-<!-- polls <- read_dta("data/polls.dta") -->
-<!-- # nos quedamos con la última encuesta y eliminamos faltantes -->
-<!-- last_poll <- polls %>%  -->
-<!--     filter(survey == 8) %>%  -->
-<!--     mutate(age_edu = paste0(age, edu),  -->
-<!--       age_edu_int = as.integer(as.factor(age_edu))) %>%  -->
-<!--     na.omit() -->
-
-<!-- # datos de elecciones pasadas para utilizar como covariable y variable región -->
-<!-- presvote <- read_dta("data/presvote.dta") %>%  -->
-<!--     cbind(region = c(3,4,4,3,4,4,1,1,5,3,3,4,4,2,2,2,2,3,3,1,1,1,2,2,3,2,4,2,4, -->
-<!--         1,1,4,1,3,2,2,3,4,1,1,3,2,3,3,4,1,3,4,1,2,4)) -->
-<!-- ``` -->
-
-<!-- Los datos para el modelo serán: -->
-
-<!-- ```{r, eval=FALSE} -->
-<!-- data_list <- list(N = nrow(last_poll),  -->
-<!--     n_age = n_distinct(last_poll$age), -->
-<!--     n_age_edu = n_distinct(last_poll$age, last_poll$edu), -->
-<!--     n_edu = n_distinct(last_poll$edu),  -->
-<!--     n_region = 5,  -->
-<!--     n_state = max(last_poll$state),  -->
-<!--     age = last_poll$age, -->
-<!--     black = last_poll$black, -->
-<!--     edu = last_poll$edu, -->
-<!--     female = last_poll$female, -->
-<!--     region = presvote$region, -->
-<!--     state = last_poll$state,  -->
-<!--     v_prev = presvote$g76_84pr, -->
-<!--     y = last_poll$bush -->
-<!-- ) -->
-<!-- ``` -->
-
-<!-- Y el código en Stan: -->
-
-<!-- ```{r, eval =FALSE} -->
-<!-- model_mrp <- " -->
-<!-- data { -->
-<!--   int n; // número de observaciones -->
-<!--   int n_state; // número de estados -->
-<!--   int n_age; -->
-<!--   int n_edu; -->
-<!--   int n_age_edu; -->
-<!--   int age[n]; -->
-<!--   int edu[n]; -->
-<!--   int age_edu[n]; -->
-<!--   int mh; //número de covariables nivel persona -->
-<!--   int mm; //número de covariables nivel estado -->
-<!--   int<lower=0,upper=1> y[n]; -->
-<!--   matrix[n, mh] x_person; // covariables a nivel persona -->
-<!--   int state[n]; -->
-<!--   matrix[n_state, mm] x_state; // covariables a nivel estado -->
-<!-- }  -->
-<!-- parameters { -->
-<!--   real beta_0; -->
-<!--   vector[mh] beta; -->
-<!--   real<lower=0> sigma; -->
-<!--   vector[n_state] beta_state_raw; -->
-<!--   vector[n_age] beta_age_raw; -->
-<!--   vector[n_edu] beta_edu_raw; -->
-<!--   vector[n_age_edu] beta_age_edu_raw; -->
-<!--   real<lower=0> sigma_age; -->
-<!--   real<lower=0> sigma_edu; -->
-<!--   real<lower=0> sigma_age_edu; -->
-<!--   real<lower=0> sigma_state; -->
-<!--   vector[mm] alpha; -->
-<!-- } -->
-<!-- transformed parameters { -->
-<!--   vector[n] reg_pred; -->
-<!--   vector[n_state] beta_state; -->
-<!--   vector[n_age] beta_age; -->
-<!--   vector[n_edu] beta_edu; -->
-<!--   vector[n_age_edu] beta_age_edu; -->
-<!--   // parametrización no centrada -->
-<!--   beta_age = beta_age_raw * sigma_age;  -->
-<!--   beta_edu = beta_edu_raw * sigma_edu;  -->
-<!--   beta_age_edu = beta_age_edu_raw * sigma_age_edu;  -->
-<!--   beta_state = beta_state_raw * sigma_state + x_state * alpha;  -->
-<!--   reg_pred = beta_0 + x_person * beta + beta_state[state] + beta_age[age] +  -->
-<!--     beta_edu[edu] + beta_age_edu[age_edu]; -->
-<!-- } -->
-<!-- model {   -->
-<!--   y ~ bernoulli_logit(reg_pred); -->
-<!--   beta_0 ~ normal(0, 2); -->
-<!--   beta ~ normal(0, 5); -->
-<!--   sigma ~ normal(0, 5); -->
-<!--   beta_age_raw ~ normal(0, 10); -->
-<!--   beta_edu_raw ~ normal(0, 10); -->
-<!--   beta_age_edu_raw ~ normal(0, 10); -->
-<!--   beta_state_raw ~ normal(0, 10); -->
-<!--   sigma_state ~ normal(0, 10); -->
-<!--   sigma_age ~ normal(0, 10); -->
-<!--   sigma_edu ~ normal(0, 10); -->
-<!--   sigma_age_edu ~ normal(0, 10); -->
-<!--   alpha ~ normal(0, 5); -->
-<!-- } -->
-
-<!-- " -->
-<!-- cat(model_mrp, file = 'src/stan_files/model_mrp.stan') -->
-<!-- ``` -->
-
-<!-- 1. **Modelo**. Ajusta el modelo y revisa convergencia, describe  -->
-<!-- cuantas cadenas, iteraciones y etapa de calentamiento elegiste, además  -->
-<!-- escribe como determinaste convergencia. -->
-
-<!-- 2. **Evaluación de ajuste**. Usaremos la distribución predictiva posterior para -->
-<!-- simular del modelo y comparar con los datos observados. En particular veremos  -->
-<!-- como se comparan las simulaciones del modelo por estado, la gráfica con los  -->
-<!-- datos será la que sigue: -->
-
-<!-- ```{r, eval = FALSE} -->
-<!-- bush_state <- last_poll %>%  -->
-<!--     group_by(state) %>%  -->
-<!--     summarise(prop = mean(bush, na.rm = TRUE)) %>%  -->
-<!--     ungroup() %>%  -->
-<!--     mutate(state_ord = as.numeric(reorder(state, prop))) -->
-
-<!-- ggplot(bush_state, aes(x = state_ord, y = prop)) + -->
-<!--     geom_line() -->
-<!-- ``` -->
-
-<!-- Debes simular del modelo 10 conjutos de datos del tamaño de los originales  -->
-<!-- (replicaciones de los datos) y hacer una gráfica de páneles donde muestres los  -->
-<!-- datos originales y las replicaciones, ¿que concluyes al ver la gráfica? -->
+#### Implementación {-}
 
 
-<!-- 3. El siguiente código predice para cada celda de la tabla del censo, vale la  -->
-<!-- pena notar, que para cada celda tenemos una lista en el vector `pred` con las  -->
-<!-- simuaciones que le corresponden. -->
+```{r, include=FALSE}
+# preparación de los datos
+library(haven)
+# datos de encuestas
+polls <- read_dta("./data/polls.dta")
+# nos quedamos con la última encuesta y eliminamos faltantes
+last_poll <- polls %>%
+    filter(survey == 8) %>%
+    mutate(age_edu = paste0(age, edu),
+      age_edu_int = as.integer(as.factor(age_edu))) %>%
+    na.omit()
 
-<!-- ```{r, eval = FALSE} -->
-<!--  # construct the n.sims x 3264 matrix -->
-<!-- census88 <- read_dta("data/census88.dta") -->
+# datos de elecciones pasadas para utilizar como covariable y variable región
+presvote <- read_dta("./data/presvote.dta") %>%
+    cbind(region = c(3,4,4,3,4,4,1,1,5,3,3,4,4,2,2,2,2,3,3,1,1,1,2,2,3,2,4,2,4,
+        1,1,4,1,3,2,2,3,4,1,1,3,2,3,3,4,1,3,4,1,2,4))
+```
 
-<!-- params_sims <- as.data.frame(stan_fit, pars = c("beta_0", "beta", "beta_age",  -->
-<!--     "beta_edu", "beta_age_edu", "beta_state")) -->
-<!--     )) -->
 
-<!-- pred_cell <- census88 %>%  -->
-<!--     mutate(age_edu = paste0(age, edu),  -->
-<!--         age_edu_int = as.integer(as.factor(age_edu))) %>%  -->
-<!--     rowwise() %>%  -->
-<!--     mutate( -->
-<!--         pred = list(arm::invlogit(params_sims$beta_0 +  -->
-<!--                 params_sims$`beta[1]` * female + -->
-<!--                 params_sims$`beta[2]` * black +  -->
-<!--                 params_sims$`beta[3]` * female * black + -->
-<!--                 params_sims[, str_c("beta_age[", round(age), "]")] + -->
-<!--                 params_sims[, str_c("beta_edu[", round(edu), "]")] +   -->
-<!--                 params_sims[, str_c("beta_age_edu[", age_edu_int, "]")] +   -->
-<!--                 params_sims[, str_c("beta_state[", round(state), "]")])) -->
-<!--     )  -->
-<!-- ``` -->
+```{r, include=FALSE}
+x_person <- model.matrix(~ female + black + female * black, data = last_poll)
+x_state <- model.matrix(~ -1 + factor(region) + g76_84pr, data = presvote) 
 
-<!-- Para hacer las estimaciones por estado hace falta ponderar por el número de  -->
-<!-- casos en cada celda: -->
 
-<!-- $$\theta_s=\frac{\sum_{j \in s}N_{j}\pi_j}{\sum_{j \in s}N_{j}}$$ -->
+data_list <- list(
+    n = nrow(last_poll), 
+    n_age = n_distinct(last_poll$age),
+    n_age_edu = n_distinct(last_poll$age_edu_int),
+    n_edu = n_distinct(last_poll$edu), 
+    n_state = max(last_poll$state), 
+    mh = 3, 
+    mm = 6, 
+    age = last_poll$age,
+    edu = last_poll$edu,
+    age_edu = last_poll$age_edu_int,
+    state = last_poll$state, 
+    y = last_poll$bush, 
+    x_person = x_person[, -1],
+    x_state = x_state
+)
+```
 
-<!-- 4. Genera las simulaciones de $\theta_s$, recuerda que debarás calcular  -->
-<!-- una simulación de cada $\theta_s$ por cada simulación de $\pi_j$ obtenida con  -->
-<!-- el código de arriba. Realiza una gráfica con intervalos de credibilidad del 95%  -->
-<!-- para cada $theta_s$. -->
+
+1. **Modelo**. Ajusta el modelo y revisa convergencia, describe cuantas cadenas, iteraciones y etapa de calentamiento elegiste, además escribe como determinaste convergencia.
+
+Primero definimos el modelo.
+
+```{r}
+model_mrp <- stan_model('model_mrp.stan')
+```
+
+Posteriormente se corre el modelo con los datos.
+
+```{r, warning=FALSE, message=FALSE}
+model_mrp_fit <- sampling(model_mrp,
+                          data = data_list,
+                          chains = 3,
+                          warmup = 500,
+                          iter = 1500)
+```
+
+Primero evaluamos usando *traceplot*.
+
+```{r, eval=FALSE}
+traceplot(model_mrp_fit)
+```
+
+En todos los cassos los parmámetros parecen converger. Igualmente podemos revisar el diagnóstico de convergencia Gelman-Rubin.
+
+```{r}
+mcmc_rhat(rhat(model_mrp_fit))
+```
+
+
+En todos los casos $\hat{R}$ es menor a $1.1$ por lo que se puede comprobar la convergencia. Ahora revisemos el tamaño efectivo de la muestra.
+
+```{r}
+mcmc_neff(neff_ratio(model_mrp_fit))
+```
+
+
+Este indicador es equivalente al visto en clase pero queremos que sea mayor a $0.1$, por lo que se puede confiar en estimaciones estables. De esta manera se eligieron las corridas y calemntamientos mínimos para lograr estos resultados.
+
+2. **Evaluación de ajuste**. Usaremos la distribución predictiva posterior para simular de modelo y comparar con los datos observados. En particular veremos como se comparan las simulaciones del modelo por estado, la gráfica con los datos será la que sigue:
+
+```{r, include=FALSE}
+bush_state <- last_poll %>%
+    group_by(state) %>%
+    summarise(prop = mean(bush, na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(state_ord = as.numeric(reorder(state, prop)))
+
+ggplot(bush_state, aes(x = state_ord, y = prop)) +
+    geom_line()
+```
+
+Debes simular del modelo 10 conjutos de datos del tamaño de los originales (replicaciones de los datos) y hacer una gráfica de páneles donde muestres los datos originales y las replicaciones, ¿que concluyes al ver la gráfica?
+
+Primero obtenemos los parámetros *reg_pred* y los acomodamos en una tabla.
+
+```{r}
+state <- tibble(id = 1:2015, state = last_poll$state)
+
+par_sim <- as.data.frame(model_mrp_fit, pars = 'reg_pred') %>% 
+  mutate(n_sim = 1:n()) %>% 
+  filter(n_sim <= 10) %>% 
+  pivot_longer(cols = -n_sim, names_to = "id", values_to = "reg_pred", names_prefix = 'reg_pred') %>%   mutate(id = parse_number(id)) %>% 
+  left_join(state, by = 'id') %>% 
+  mutate(y = invlogit(reg_pred)) %>% 
+  group_by(n_sim, state) %>%
+  summarise(prop = mean(y)) %>%
+  ungroup() %>%
+  arrange(n_sim, prop) %>% 
+  mutate(state_ord = rep(1:49,10))
+
+bush_state$n_sim <- 'orig'
+
+par_sim <- rbind(par_sim, bush_state)
+
+```
+
+Posteriormente hacemos la gráfica.
+
+```{r}
+ggplot(par_sim, aes(x = state_ord, y = prop)) +
+  geom_line() +
+  facet_wrap(~n_sim) +
+  theme_light()
+```
+
+
+
+
+3. El siguiente código predice para cada celda de la tabla del censo, vale la pena notar, que para cada celda tenemos una lista en el vector `pred` con las simuaciones que le corresponden.
+
+```{r, include = FALSE}
+ # construct the n.sims x 3264 matrix
+census88 <- read_dta("./data/census88.dta")
+
+params_sims <- as.data.frame(model_mrp_fit, pars = c("beta_0", "beta", "beta_age", 
+    "beta_edu", "beta_age_edu", "beta_state"))
+
+
+pred_cell <- census88 %>% 
+    mutate(age_edu = paste0(age, edu), 
+        age_edu_int = as.integer(as.factor(age_edu))) %>% 
+    rowwise() %>% 
+    mutate(
+        pred = list(invlogit(params_sims$beta_0 + 
+                params_sims$`beta[1]` * female +
+                params_sims$`beta[2]` * black + 
+                params_sims$`beta[3]` * female * black +
+                params_sims[, str_c("beta_age[", round(age), "]")] +
+                params_sims[, str_c("beta_edu[", round(edu), "]")] +  
+                params_sims[, str_c("beta_age_edu[", age_edu_int, "]")] +  
+                params_sims[, str_c("beta_state[", round(state), "]")]))
+    ) 
+```
+
+Para hacer las estimaciones por estado hace falta ponderar por el número de casos en cada celda:
+
+$$\theta_s=\frac{\sum_{j \in s}N_{j}\pi_j}{\sum_{j \in s}N_{j}}$$
+
+4. Genera las simulaciones de $\theta_s$, recuerda que debarás calcular una simulación de cada $\theta_s$ por cada simulación de $\pi_j$ obtenida con el código de arriba. Realiza una gráfica con intervalos de credibilidad del 95% para cada $theta_s$.
+
+Primero construimos una función que ayudará a obtener las tetas para cada simulación
+```{r}
+
+f_theta <- function(i){
+  pred_cell %>% 
+    mutate(Num = N*pred[i]) %>% 
+    group_by(state) %>% 
+    summarise(theta_s = sum(Num)/sum(N))
+}
+```
+
+Ahora obtenemos las thetas
+
+```{r, warning=FALSE, message=FALSE}
+theta <- map(1:3000,f_theta) %>% 
+  bind_rows(.id='sim') %>% 
+  group_by(state) %>% 
+  summarise(
+    media = mean(theta_s),
+    int_l = quantile(theta_s,0.025),
+    int_u = quantile(theta_s,0.975)
+  )
+```
+
+Por último realizamosla gráfica de intervalos por estado.
+
+```{r}
+ggplot(theta, aes(x = reorder(state,media), y = media, color = factor(state))) +
+  geom_pointrange(aes(ymin=int_l, ymax = int_u), size = 0.3) +
+  geom_point(color = 'black') +
+  theme(legend.position = "none") +
+  theme_light()
+```
+
