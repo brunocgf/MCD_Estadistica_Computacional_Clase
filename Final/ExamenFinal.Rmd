@@ -114,9 +114,9 @@ A continuación hacemos las gráficas correspondientes
 
 ```{r, message=FALSE, warning=FALSE, results = 'hide'}
 ggplot(null_wages, aes(x = exper, y = lnw)) +
-  geom_point(alpha = 0.3, size = 0.8) + 
+  geom_point(alpha = 0.2, size = 0.8) + 
   geom_smooth(aes(group = raza, color = raza), method = "loess", se = FALSE, size=0.5) +
-  facet_wrap(~.sample)
+  facet_wrap(~.sample) +
   theme_light()
 ```
 
@@ -133,13 +133,13 @@ nulos, generados bajo el supuesto de que no existe diferencia entre los
 subgrupos. ¿Cuál es la gráfica más distinta?
 
 Reporta si las personas cuestionadas pudieron distinguir los datos.
-La persona no pudo distinguir los datos
+Se le preguntó a 5 personas, de las cuales solo 2 pudieron distinguir los datos correctos.
 
 * ¿Cuál es tu conclusión de la prueba de hipótesis visual?
-No se puede rechazar la hipotesis nula, por lo que no se puede deducir que existe diferencia en los salarios con base en los años trabajados entre los subgrupos
+No se puede rechazar la hipotesis nula, por lo que no se puede deducir que existe diferencia en los salarios con base en los años trabajados entre los subgrupos.
 
 * ¿A cuántas personas preguntaste y cuál es el valor p de la prueba?
-Una persona por lo que el valor p es de $0$.
+Dado que solo 2 personas de 5 distinguieron la gráfica con los datos reales (rechazaron la hipótesis nula), el vaolor p es de $0.6$.
 
 
 ### 2. Simulación para el cálculo de tamaños de muestra
@@ -372,7 +372,7 @@ st1_700<-rerun(1000,estimador_strata(by_stratum_dist_17$distrito_fed_17,
             se_otros=sd(p_otros))
 ```
 
-```{r}
+```{r, cache = TRUE}
 #Estrado distrito local 17
 
 st2_50<-rerun(1000,estimador_strata(by_stratum_local_17$distrito_loc_17,
@@ -468,58 +468,57 @@ Si nos fueramos por elegir el diseño que minimiza el error estándar se escoger
 
 ### 3. MCMC
 
-<!-- Siguiendo con el conteo rápido de Guanajuato, calcularás intervalos de confianza -->
-<!-- usando el modelo propuesto en @mendoza2016. -->
+Siguiendo con el conteo rápido de Guanajuato, calcularás intervalos de confianza usando el modelo propuesto en @mendoza2016.
 
-<!-- Los autores proponen ajustar un modelo de manera independiente para cada  -->
-<!-- candidato en cada estrato: -->
+Los autores proponen ajustar un modelo de manera independiente para cada candidato en cada estrato:
 
-<!-- * Verosimilitud -->
+* Verosimilitud
 
-<!-- $$X_{ij}^k\big|\theta_{ij},\tau_{ij}\sim N\bigg(n_i^k\theta_{ij}, \frac{\tau_{ij}}{n_i^k}\bigg)$$ -->
+$$X_{ij}^k\big|\theta_{ij},\tau_{ij}\sim N\bigg(n_i^k\theta_{ij}, \frac{\tau_{ij}}{n_i^k}\bigg)$$
 
-<!-- para $k=1,...,c_i$, $i = 1,...,N$, $j=1,...,J$ -->
+para $k=1,...,c_i$, $i = 1,...,N$, $j=1,...,J$
 
-<!-- * Iniciales -->
+* Iniciales
 
-<!-- $$p(\theta_{i,j},\tau_{ij})\propto \tau_{ij}^{-1}I(\tau_{ij}>0)I(0<\theta_{i,j}<1)$$ -->
+$$p(\theta_{i,j},\tau_{ij})\propto \tau_{ij}^{-1}I(\tau_{ij}>0)I(0<\theta_{i,j}<1)$$
 
-<!-- * Posterior -->
+* Posterior
 
-<!-- $$p(\theta_{ij}, \tau_{ij}|X_{ij}) \sim N\bigg(\theta_{ij} \bigg| \frac{\sum_{k=1}^{c_i}x_{ij}^k}{\sum_{k=1}^{c_i}n_{i}^k}, \tau_{ij}\sum_{k=1}^{c_i}n_i^k\bigg)I(0<\theta_{ij}<1)\times Ga\bigg(\tau_{ij}\bigg|\frac{c_i-1}{2}, \frac{1}{2}\bigg[\sum_{k=1}^{c_i}\frac{(x_{ij}^k)^2}{n_i^k}-\frac{\big(\sum_{k=1}^{c_i}x_{ij}^k\big)^2}{\sum_{k=1}^{c_i}n_i^k}\bigg]\bigg)$$ -->
-<!-- donde: -->
+$$p(\theta_{ij}, \tau_{ij}|X_{ij}) \sim N\bigg(\theta_{ij} \bigg| \frac{\sum_{k=1}^{c_i}x_{ij}^k}{\sum_{k=1}^{c_i}n_{i}^k}, \tau_{ij}\sum_{k=1}^{c_i}n_i^k\bigg)I(0<\theta_{ij}<1)\times Ga\bigg(\tau_{ij}\bigg|\frac{c_i-1}{2}, \frac{1}{2}\bigg[\sum_{k=1}^{c_i}\frac{(x_{ij}^k)^2}{n_i^k}-\frac{\big(\sum_{k=1}^{c_i}x_{ij}^k\big)^2}{\sum_{k=1}^{c_i}n_i^k}\bigg]\bigg)$$
 
-<!-- * $X_{ij}$ número de personas que favorecen al candidato $j$ en el estrato $i$. -->
 
-<!-- * $X_{ij}^k$ número de personas que favorecen al candidato $j$ en la casilla $k$  -->
-<!-- del estrato $i$. -->
+Implementa el modelo y estima los resultados electorales de Guanajuato con la muestra:
 
-<!-- * $n_i^k$ tamaño de la lista nominal en la $k$-ésima casilla del $i$-ésimo  -->
-<!-- estrato. -->
+```{r, include=FALSE}
+gto_muestra <- read_csv("data/muestra_gto_2012.csv")
+```
 
-<!-- * $\tau_{ij}/n_i^{k}$ es la precisión para cada candidato. -->
+Reporta estimaciones puntuales (media posterior) e intervalos del 95% de credibilidad para cada candidato.
 
-<!-- * $\theta_{ij}$ es la proporción de las personas en la lista nominal del estrato -->
-<!-- $i$ que favorecen al $j$-ésimo partido. -->
+Primereo definimos la distribución inicial.
 
-<!-- * $c_i$ número de casillas del $i$-ésimo estrato en la muestra. -->
+```{r}
+prior <- function(tau){
+  function(theta){
+    (1/tau)*ifelse(tau>0,1,0)*ifelse(theta>0&theta<1,1,0)
+  }
+}
+```
 
-<!-- Los detalles del modelo los puedes encontrar en el [artículo](https://drive.google.com/open?id=1lI5lUSqNcIYvlvxRyrbBD_IrzlWIzILY). -->
+Ahora difinimos la función para la verosimilitud.
 
-<!-- Implementa el modelo y estima los resultados electorales de Guanajuato con la  -->
-<!-- muestra: -->
+```{r}
+likelihood <- function(Xk,nk,tau,c){
+  function(theta){
+    pnorm(theta,tau*nk)*ifelse(theta>0&theta<1,1,0)*rgamma(tau,(Xk^2/nk - Xk^2/nk)/2)
+  }
+}
+```
 
-<!-- ```{r, eval=FALSE} -->
-<!-- gto_muestra <- read_csv("data/muestra_gto_2012.csv") -->
-<!-- ``` -->
-
-<!-- Reporta estimaciones puntuales (media posterior) e intervalos del 95% de  -->
-<!-- credibilidad para cada candidato. -->
 
 ### 4. Modelos jerárquicos, Stan y evaluación de ajuste
 
-#### Implementación {-}
-
+#### Implementación
 
 ```{r, include=FALSE}
 # preparación de los datos
@@ -568,7 +567,7 @@ data_list <- list(
 
 Primero definimos el modelo.
 
-```{r}
+```{r, cache = TRUE}
 model_mrp <- stan_model('model_mrp.stan')
 ```
 
@@ -590,7 +589,7 @@ traceplot(model_mrp_fit)
 
 En todos los cassos los parmámetros parecen converger. Igualmente podemos revisar el diagnóstico de convergencia Gelman-Rubin.
 
-```{r}
+```{r, cache=TRUE}
 mcmc_rhat(rhat(model_mrp_fit))
 ```
 
