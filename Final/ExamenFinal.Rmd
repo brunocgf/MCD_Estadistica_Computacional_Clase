@@ -1,6 +1,8 @@
 ---
 title: "Examen Final"
-author: "Bruno C. Gonzalez"
+author:
+- "Yalidt Diaz - 141394"
+- "Bruno Gonzalez - 150370"
 date: "4/12/2019"
 output: pdf_document
 ---
@@ -16,6 +18,7 @@ library(tidyverse)
 library(glue)
 library(sampler)
 library(pps)
+library(MCMCglmm)
 set.seed(51)
 ```
 
@@ -454,12 +457,16 @@ tablaSe
 cada estratificación.
 
 ```{r}
-new_table<-tablaSe %>% gather(key =partido,value=se,se_pri:se_otros)
+new_table <- tablaSe %>%
+  gather(key =partido,value=se,se_pri:se_otros)
 
-new_table %>% ggplot(aes(x=n,y=se))+
-  geom_line(aes(x=n,y=se,colour=sample))+
-  facet_wrap(~partido)+
-  labs(title="Gráfica 2.1 Errores Estándar para cada tipo de muestreo",y="Error Estandar",x="Tamaño de la muestra")
+new_table %>%
+  ggplot(aes(x=n,y=se))+
+    geom_line(aes(x=n,y=se,colour=sample))+
+    facet_wrap(~partido)+
+    labs(title="Gráfica 2.1 Errores Estándar para cada tipo de muestreo",y="Error Estandar",x="Tamaño de la muestra") +
+    theme(axis.text = element_text(angle=45,hjust=1,size=5)) +
+    theme_light()
 ```
 
 3. ¿Qué diseño y tamaño de muestra elegirías? Explica tu respuesta y de ser necesario repite los pasos i-iii para otros valores de $n$.
@@ -505,15 +512,109 @@ prior <- function(tau){
 }
 ```
 
-Ahora difinimos la función para la verosimilitud.
+Definamos la función para la verosimilitud.
 
 ```{r}
-likelihood <- function(Xk,nk,tau,c){
+likelihood <- function(x_j,n,tau,c){
   function(theta){
-    pnorm(theta,tau*nk)*ifelse(theta>0&theta<1,1,0)*rgamma(tau,(Xk^2/nk - Xk^2/nk)/2)
+    pnorm(theta,tau*nk)*ifelse(theta>0&theta<1,1,0)*rgamma(tau,(x_j^2/nk - x_j^2/nk)/2)
   }
 }
 ```
+
+Con los datos electorales definimos la prior inicial y verosimilitud
+
+Definamos la función posterior
+
+```{r}
+sims_posterior <- function(x_j, n, n_sims = 200){
+    a_gamma <- (sum(n) - 1)/2
+    print(a_gamma)
+    b_gamma <- 1/ 2 * (sum(x_j ^ 2 / n) - sum(x_j) ^ 2 / sum(n))
+    b_gamma <- ifelse(b_gamma == 0, 0.05, b_gamma)
+    print(b_gamma)
+    tau_sims <- rgamma(n_sims, shape = a_gamma, rate = b_gamma)
+    print(tau_sims)
+    media_normal <- sum(x_j) / sum(n)
+    desv_normal <- map_dbl(tau_sims, ~ sqrt(1/(.*sum(n))))
+    theta_sims <- map_dbl(desv_normal, ~rtnorm(1, media_normal, ., 0, 1))
+    list(theta = theta_sims, tau = tau_sims)
+}
+```
+
+La tabla de las muestras es la siguiente
+
+```{r}
+gto_stratum_sizes <- gto_muestra %>% 
+    group_by(distrito_loc_17) %>% 
+    summarise(n_stratum = n()) %>% 
+    rename(strata = distrito_loc_17)
+
+# gto_sample <- gto_muestra %>% 
+#   group_by(distrito_loc_17) %>% 
+#   sample_frac(0.06, replace = FALSE) %>% 
+#   ungroup()
+
+```
+
+Despivotemos la tabla para facilitar la manipulación
+
+```{r}
+data_long <- gto_muestra %>%
+        mutate(casilla_id = 1:n()) %>% 
+        rename(strata = distrito_loc_17) %>% 
+        select(casilla_id, strata, ln_total, pri_pvem:otros) %>% 
+        pivot_longer(pri_pvem:otros, names_to = 'party', values_to = 'votes')
+```
+
+```{r}
+# data_stratum <- gto_stratum_sizes %>% 
+#         rename(strata = distrito_loc_17)
+```
+
+Ahora podemos simular las tethas
+
+```{r, cache=TRUE, message=FALSE, warning=FALSE,results = "hide"}
+theta_sims <- data_long %>%
+  split(list(.$strata, .$party)) %>% 
+  map_df(~sims_posterior(x_j = .$votes, n = .$ln_total, n_sims = 100)$theta) %>% 
+  mutate(n_sim = 1:dplyr::n()) %>% 
+  gather(estrato_partido, theta, -n_sim) %>% 
+  separate(estrato_partido, into = c("strata", "party"),
+            sep = "[.]") %>% 
+  mutate(strata = as.numeric(strata)) %>% 
+  left_join(gto_stratum_sizes, by = "strata")
+```
+
+Finalmente podemos simular las lambdas.
+
+```{r}
+lambdas <- theta_sims %>% 
+        group_by(party, n_sim) %>% 
+        summarise(theta_wgt = sum(n_stratum * theta / sum(n_stratum))) %>% 
+        group_by(n_sim) %>% 
+        mutate(lambda = 100 * theta_wgt / sum(theta_wgt)) %>% 
+        ungroup() %>% 
+        select(-theta_wgt)
+```
+
+Las estimaciones puntuales e intervalos de 95% son:
+
+```{r}
+lambdas %>% 
+        group_by(party) %>% 
+        summarise(
+            mean_post = mean(lambda), 
+            median_post = median(lambda), 
+            std_error = sd(lambda), 
+            q_low = quantile(lambda, 0.025), 
+            q_sup = quantile(lambda, 0.975)
+        ) %>% 
+        ungroup()
+```
+
+**Este ejercicio está basado complatamente en el desarrollado por Teresa Ortiz ([tereom/quickcountmx]([https://github.com/tereom/quickcountmx])).**
+
 
 
 ### 4. Modelos jerárquicos, Stan y evaluación de ajuste
